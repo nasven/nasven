@@ -14,5 +14,23 @@ The samples folder contains a Nashorn application that depends on the JAX-RS Cli
         
         $ ./mvn.sh -- samples/jaxrs.mvn
 
+## Nashorn Maven Configuration File
+The configuration file is a Javascript file with a **maven** object with the following attributes:
+ - main: the script to be actually executed
+ - options: options to be passed to **jjs**
+ - arguments: arguments to be passed to your **main** script
+ - dependencies: an array of Maven artifacts your script depends on. Format of the string is as follows: groupId:artifactId:version
+
+### Example of Configuration File
+```javascript
+var maven = {
+  main: "your-javafx-app.js",
+  options: ["-fx"],
+  arguments: ["timeOut=10"],
+  dependencies: ["org.glassfish.jersey.core:jersey-client:2.17", 
+                 "org.glassfish.jersey.connectors:jersey-grizzly-connector:2.17"]
+}
+```
+
 ## License
 GPL+CDDL
