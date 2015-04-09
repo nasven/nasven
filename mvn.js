@@ -1,3 +1,4 @@
+#!/usr/bin/jjs -scripting
 /*
  * Nashorn Maven Executor
  * 
@@ -11,6 +12,8 @@
  * To run this script, you must enable the Scripting extension of Nashorn:
  * 
  *   $ jjs -scripting mvn.js -- samples/jaxrs.mvn
+ *
+ *   $ ./mvn.js -- samples/jaxrs.mvn
  * 
  * Author: Bruno Borges (@brunoborges)
  * Version: 1.0
