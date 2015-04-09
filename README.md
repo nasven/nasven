@@ -12,7 +12,7 @@ The samples folder contains a Nashorn application that depends on the JAX-RS Cli
 
         $ jjs -scripting mvn.js -- samples/jaxrs.mvn
         
-        $ ./mvn.sh -- samples/jaxrs.mvn
+        $ ./mvn.js -- samples/jaxrs.mvn
 
 ## Nashorn Maven Configuration File
 The configuration file is a Javascript file with a **maven** object with the following attributes:
