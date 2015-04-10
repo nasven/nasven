@@ -7,7 +7,6 @@
 var maven = {
   main: "jaxrs.js",
   options: ["-scripting"],
-  arguments: [""],
   dependencies: ["org.glassfish.jersey.core:jersey-client:2.17", 
                  "org.glassfish.jersey.connectors:jersey-grizzly-connector:2.17"]
 }

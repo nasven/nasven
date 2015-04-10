@@ -11,9 +11,9 @@
  * 
  * To run this script, you must enable the Scripting extension of Nashorn:
  * 
- *   $ jjs -scripting mvn.js -- samples/jaxrs.mvn
+ *   $ jjs -scripting mvn.js -- samples/jaxrs/jaxrs.mvn arg0 arg1 arg2
  *
- *   $ ./mvn.js -- samples/jaxrs.mvn
+ *   $ ./mvn.js -- samples/jaxrs/jaxrs.mvn arg0 arg1 arg2
  * 
  * Author: Bruno Borges (@brunoborges)
  * Version: 1.0
@@ -85,6 +85,9 @@ $EXEC("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:build-classpath"
 var classpath = new jString(Files.readAllBytes(cpFile));
 Files.delete(cpFile);
 
-$EXEC("jjs -cp ${classpath} ${maven.options} ${maven.main} -- ${maven.arguments}");
+arguments.shift();
+newargs = arguments.join(" ");
+
+$EXEC("jjs -cp ${classpath} ${maven.options} ${maven.main} -- ${newargs}");
 print($OUT);
 print($ERR);
