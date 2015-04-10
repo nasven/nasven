@@ -27,6 +27,9 @@ var Files = Packages.java.nio.file.Files;
 var Paths = Packages.java.nio.file.Paths;
 var Charset = Packages.java.nio.charset.Charset;
 
+var DEBUG = java.lang.System.getProperty("debug") === "true";
+function debug(val) { if (debug) print(val); }
+
 function checkPathExists(path) {
   if (Files.isReadable(path) === false) {
       print("ERROR: File '${path}' cannot be found or is not readable.");
@@ -34,9 +37,12 @@ function checkPathExists(path) {
   }
 }
 
-var mvnDefFile = Paths.get(arguments[0]);
-var parentPath = mvnDefFile.getParent()
+var mvnDefFile = Paths.get(arguments[0]).toAbsolutePath();
+var parentPath = mvnDefFile.getParent();
 checkPathExists(mvnDefFile);
+
+$ENV.PWD = parentPath.toString();
+
 load(mvnDefFile.toString());
 
 if (typeof maven === 'undefined') {
@@ -89,9 +95,9 @@ var mvnCmd = "mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:build-cla
 $EXEC(mvnCmd);
 
 var classpath = new jString(Files.readAllBytes(cpFile));
+debug(classpath);
 Files.delete(cpFile);
 
-var nashornCmd = "jjs -cp ${classpath} ${maven.options} ${mainScript} -- ${maven.arguments}";
-$EXEC(nashornCmd);
+$EXEC("jjs -cp ${classpath} ${maven.options} ${maven.main} -- ${maven.arguments}");
 print($OUT);
-
+print($ERR);
