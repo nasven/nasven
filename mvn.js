@@ -27,9 +27,6 @@ var Files = Packages.java.nio.file.Files;
 var Paths = Packages.java.nio.file.Paths;
 var Charset = Packages.java.nio.charset.Charset;
 
-var DEBUG = java.lang.System.getProperty("debug") === "true";
-function debug(val) { if (debug) print(val); }
-
 function checkPathExists(path) {
   if (Files.isReadable(path) === false) {
       print("ERROR: File '${path}' cannot be found or is not readable.");
@@ -40,9 +37,7 @@ function checkPathExists(path) {
 var mvnDefFile = Paths.get(arguments[0]).toAbsolutePath();
 var parentPath = mvnDefFile.getParent();
 checkPathExists(mvnDefFile);
-
 $ENV.PWD = parentPath.toString();
-
 load(mvnDefFile.toString());
 
 if (typeof maven === 'undefined') {
@@ -53,18 +48,13 @@ if (typeof maven === 'undefined') {
 var mainScript = Paths.get(parentPath, maven.main);
 checkPathExists(mainScript);
 
-var depArray = Java.to(maven.dependencies, "java.lang.String[]");
-var depStream = Arrays.stream(depArray);
-var dependenciesCP = depStream.map(function (dep) {
+var dependenciesCP = Arrays.stream(Java.to(maven.dependencies, "java.lang.String[]")).map(function (dep) {
     var tokens = dep.split(":");
-    var groupId = tokens[0];
-    var artifactId = tokens[1];
-    var version = tokens[2];
     var dependency = <<EOF
         <dependency>
-            <groupId>${groupId}</groupId>
-            <artifactId>${artifactId}</artifactId>
-            <version>${version}</version>
+            <groupId>${tokens[0]}</groupId>
+            <artifactId>${tokens[1]}</artifactId>
+            <version>${tokens[2]}</version>
         </dependency>
     EOF
     return dependency;
@@ -91,11 +81,8 @@ var writer = Files.newBufferedWriter(pomFile, charset);
 writer.write(pomTemplate, 0, pomTemplate.length);
 writer.close();
 
-var mvnCmd = "mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:build-classpath"; 
-$EXEC(mvnCmd);
-
+$EXEC("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:build-classpath");
 var classpath = new jString(Files.readAllBytes(cpFile));
-debug(classpath);
 Files.delete(cpFile);
 
 $EXEC("jjs -cp ${classpath} ${maven.options} ${maven.main} -- ${maven.arguments}");
