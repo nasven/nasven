@@ -85,7 +85,7 @@ if (typeof maven.dependencies !== 'undefined') {
 
   var cpFile = Paths.get(parentPath, mainScript.toFile().getName() + '.cp').toAbsolutePath();
   $EXEC("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:build-classpath");
-  classpath = new jString('-cp ' + Files.readAllBytes(cpFile));
+  classpath = '-cp ' + new jString(Files.readAllBytes(cpFile));
   Files.delete(cpFile);
 }
 
