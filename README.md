@@ -26,7 +26,7 @@ The configuration file is a Javascript file with a **maven** object with the fol
 ```javascript
 var maven = {
   main: "your-javafx-app.js",
-  options: ["-fx"],
+  options: "-fx -doe",
   dependencies: ["org.glassfish.jersey.core:jersey-client:2.17", 
                  "org.glassfish.jersey.connectors:jersey-grizzly-connector:2.17"]
 }

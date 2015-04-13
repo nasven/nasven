@@ -6,6 +6,6 @@
  */
 var maven = {
   main: "csv.js",
-  options: ["-scripting"],
+  options: "-scripting",
   dependencies: ["org.apache.commons:commons-csv:1.1"]
 }
