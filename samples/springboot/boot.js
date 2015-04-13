@@ -40,4 +40,4 @@ app.addInitializers(function(applicationContext) {
     });
 app.run();
 
-deamon();
+daemon();
