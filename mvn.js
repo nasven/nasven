@@ -90,9 +90,9 @@ if (typeof maven.dependencies !== 'undefined') {
 }
 
 arguments.shift();
-newargs = arguments.join(" ");
+newargs = '-- ' + arguments.join(" ");
 
 var options = typeof maven.options === 'undefined' ? '' : maven.options;
-$EXEC("jjs ${classpath} ${options} ${mainScript} -- ${newargs}");
+$EXEC("jjs ${classpath} ${options} ${mainScript} ${newargs}");
 print($OUT);
 print($ERR);
