@@ -49,7 +49,10 @@ function __doMaven() {
   var parentPath = mvnDefFile.getParent();
   checkPathExists(mvnDefFile);
   $ENV.PWD = parentPath.toString();
-  load(mvnDefFile.toString());
+
+  try {
+    load(mvnDefFile.toString());
+  } catch(e) { }
 
   if (typeof maven === 'undefined') {
     print("ERROR: Nashorn Maven application has no 'maven' object defined.");
