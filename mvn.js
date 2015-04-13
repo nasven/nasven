@@ -48,17 +48,18 @@ if (typeof maven === 'undefined') {
 var mainScript = Paths.get(parentPath, maven.main);
 checkPathExists(mainScript);
 
-var dependenciesCP = Arrays.stream(Java.to(maven.dependencies, "java.lang.String[]")).map(function (dep) {
-    var tokens = dep.split(":");
-    var dependency = <<EOF
+var dependenciesCP = Arrays.stream(Java.to(maven.dependencies, "java.lang.String[]"))
+  .map(function (dep) {return dep.split(":");})
+  .map(function (tokens) {
+    return <<EOF
         <dependency>
             <groupId>${tokens[0]}</groupId>
             <artifactId>${tokens[1]}</artifactId>
             <version>${tokens[2]}</version>
         </dependency>
     EOF
-    return dependency;
-}).collect(Collectors.joining("\n"));
+  })
+  .collect(Collectors.joining("\n"));
 
 var pomTemplate = <<EOF
  <project>
@@ -74,13 +75,10 @@ var pomTemplate = <<EOF
  </project>
 EOF
 
-var cpFile = Paths.get(parentPath, mainScript.toFile().getName()+'.cp').toAbsolutePath();
-var pomFile = Files.createTempFile('pom-', '-'+mainScript.toFile().getName() + '.xml');
-var charset = Charset.forName("US-ASCII");
-var writer = Files.newBufferedWriter(pomFile, charset);
-writer.write(pomTemplate, 0, pomTemplate.length);
-writer.close();
+var pomFile = Files.createTempFile('pom-', '-' + mainScript.toFile().getName() + '.xml').toAbsolutePath();
+Files.write(pomFile, pomTemplate.getBytes());
 
+var cpFile = Paths.get(parentPath, mainScript.toFile().getName() + '.cp').toAbsolutePath();
 $EXEC("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:build-classpath");
 var classpath = new jString(Files.readAllBytes(cpFile));
 Files.delete(cpFile);
