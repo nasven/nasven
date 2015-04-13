@@ -98,7 +98,7 @@ function __doMaven() {
     Files.write(pomFile, pomTemplate.getBytes());
 
     var cpFile = Paths.get(parentPath, mainScript.toFile().getName() + '.cp').toAbsolutePath();
-    $EXEC("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:build-classpath");
+    exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify");
     classpath = '-cp ' + new JavaString(Files.readAllBytes(cpFile));
     Files.delete(cpFile);
   }
