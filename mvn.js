@@ -48,18 +48,21 @@ if (typeof maven === 'undefined') {
 var mainScript = Paths.get(parentPath, maven.main);
 checkPathExists(mainScript);
 
-var dependenciesCP = Arrays.stream(Java.to(maven.dependencies, "java.lang.String[]"))
-  .map(function (dep) {return dep.split(":");})
-  .map(function (tokens) {
-    return <<EOF
-        <dependency>
-            <groupId>${tokens[0]}</groupId>
-            <artifactId>${tokens[1]}</artifactId>
-            <version>${tokens[2]}</version>
-        </dependency>
-    EOF
-  })
-  .collect(Collectors.joining("\n"));
+var dependenciesCP = '';
+if (typeof maven.dependencies !== 'undefined') {
+  dependenciesCP = Arrays.stream(Java.to(maven.dependencies, "java.lang.String[]"))
+    .map(function (dep) {return dep.split(":");})
+    .map(function (tokens) {
+      return <<EOF
+          <dependency>
+              <groupId>${tokens[0]}</groupId>
+              <artifactId>${tokens[1]}</artifactId>
+              <version>${tokens[2]}</version>
+          </dependency>
+      EOF
+    })
+    .collect(Collectors.joining("\n"));
+}
 
 var pomTemplate = <<EOF
  <project>
