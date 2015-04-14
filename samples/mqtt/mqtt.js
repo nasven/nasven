@@ -1,0 +1,15 @@
+var MQTT = Packages.org.fusesource.mqtt.client.MQTT;
+var QoS  = Packages.org.fusesource.mqtt.client.QoS;
+var Topic= Packages.org.fusesource.mqtt.client.Topic;
+mqtt = new MQTT();
+mqtt.setHost('tcp://test.mosquitto.org:1883');
+connection = mqtt.blockingConnection();
+connection.connect();
+var topics = [new Topic("presence", QoS.AT_LEAST_ONCE)];
+connection.subscribe(topics);
+connection.publish("presence", "Hello Nashorn!".getBytes(), QoS.AT_LEAST_ONCE, false);
+message = connection.receive();
+payload = message.getPayload();
+print(new java.lang.String(payload));
+message.ack();
+connection.disconnect();
