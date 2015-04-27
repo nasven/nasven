@@ -1,0 +1,8 @@
+/**
+ * Author: Bruno Borges (@brunoborges)
+ * Since: 2015
+ */
+var maven = {
+  main: "spark.js",
+  dependencies: ["com.sparkjava:spark-core:2.1"]
+}
