@@ -1,10 +1,10 @@
-Nashorn Maven Executor
+Nasven.js
 =====
-This project allows developers to code Nashorn applications that have dependency on Maven artifacts. It will download dependencies automatically, and then invoke the Nashorn application with the proper classpath.
+This project allows developers to code Javascript applications that run on top of the Java Platform and that may have dependencies on Apache Maven artifacts. Developers can build pure server-side applications, or desktop applications with JavaFX. Any Maven dependency will be downloaded and configured in the classpath automatically.
 
 ## Requirements
 You must have installed in your environment the following softwares:
- - JDK 8 (with Nashorn 'jjs')
+ - Java SE 8
  - Apache Maven 3+
 
 ## Example

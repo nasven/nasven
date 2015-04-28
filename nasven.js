@@ -3,7 +3,7 @@
  * Nashorn Maven Executor
  * 
  * This script is for running Nashorn scripts that depend on Maven artifacts.
- * It will load your dependencies from a .mvn file (see samples), fire Maven
+ * It will load your dependencies from an appdef.js file (see samples), fire Maven
  * to download dependencies for you, then setup the classpath for starting
  * Nashorn and your actual application.
  * 
@@ -11,9 +11,9 @@
  * 
  * To run this script, you must enable the Scripting extension of Nashorn:
  * 
- *   $ jjs -scripting mvn.js -- samples/jaxrs/jaxrs.mvn arg0 arg1 arg2
+ *   $ jjs -scripting nasven.js -- samples/jaxrs/appdef.js arg0 arg1 arg2
  *
- *   $ ./mvn.js -- samples/jaxrs/jaxrs.mvn arg0 arg1 arg2
+ *   $ ./nasven.js -- samples/jaxrs arg0 arg1 arg2
  * 
  * Author: Bruno Borges (@brunoborges)
  * Version: 1.0
@@ -112,7 +112,7 @@ var Nasven = new (function () {
     newargs = '-- ' + $ARG.join(" ");
   
     var options = typeof appdef.options === 'undefined' ? '' : appdef.options;
-    exec("jjs -DskipNasven=true ${classpath} ${options} ${__DIR__}/mvn.js ${mainScript} ${newargs}");
+    exec("jjs -DskipNasven=true ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
   }
 
   var skipNasven = Packages.java.lang.System.getProperty("skipNasven");
