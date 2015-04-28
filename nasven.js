@@ -1,8 +1,8 @@
 #!/usr/bin/jjs -J-Dnashorn.args="-fv -doe -scripting -ot" 
 /*
- * Nashorn Maven Executor
+ * Nasven.js
  * 
- * This script is for running Nashorn scripts that depend on Maven artifacts.
+ * This script is for running Javascript applications that may depend on Maven artifacts.
  * It will load your dependencies from an appdef.js file (see samples), fire Maven
  * to download dependencies for you, then setup the classpath for starting
  * Nashorn and your actual application.
