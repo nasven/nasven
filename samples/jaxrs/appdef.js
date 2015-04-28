@@ -4,7 +4,7 @@
  * Author: Bruno Borges (@brunoborges)
  * Since: 2015
  */
-var maven = {
+var appdef = {
   main: "jaxrs.js",
   options: "-scripting",
   dependencies: ["org.glassfish.jersey.core:jersey-client:2.17", 

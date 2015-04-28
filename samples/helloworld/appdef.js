@@ -4,6 +4,6 @@
  * Author: Bruno Borges (@brunoborges)
  * Since: 2015
  */
-var maven = {
+var appdef = {
   main: "helloworld.js"
 }

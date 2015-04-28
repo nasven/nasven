@@ -4,8 +4,8 @@
  * Author: Bruno Borges (@brunoborges)
  * Since: 2015
  */
-var maven = {
-  main: "csv.js",
+var appdef = {
+  main: "asciidoctor.js",
   options: "-scripting",
-  dependencies: ["org.apache.commons:commons-csv:1.1"]
+  dependencies: ["org.asciidoctor:asciidoctorj:1.5.2", "org.slf4j:slf4j-simple:1.7.12"]
 }

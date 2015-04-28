@@ -1,4 +1,4 @@
-var maven = {
+var appdef = {
   main: 'ratpack.js',
   options: '-scripting',
   dependencies: ['org.slf4j:slf4j-simple:1.7.10',

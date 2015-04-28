@@ -4,4 +4,5 @@
  */
 var Spark = Packages.spark.Spark;
 Spark.get("/", function(req, res) { return "Hello World" });
-daemon();
+
+Nasven.daemon();

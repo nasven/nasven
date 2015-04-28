@@ -20,4 +20,4 @@ RatpackServer.start(function (server) { server
   })
 });
 
-daemon();
+Nasven.daemon();

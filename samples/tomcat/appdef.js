@@ -1,6 +1,6 @@
 var tomcatVersion = '8.0.21';
 
-var maven = {
+var appdef = {
   main: 'tomcat.js',
   options: '-scripting', 
   dependencies: [
