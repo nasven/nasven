@@ -3,4 +3,4 @@ This Dockerfile extends **java:8-jdk** in order to run Nasven.js. It will instal
 
 To run, do: 
 
-        # docker run -it -v /path/to/nasven/samples/jaxrs:/appdef nasven/nasven.js
+        # docker run -it nasven/nasven.js nasven.js -- /nasven/samples/helloworld
