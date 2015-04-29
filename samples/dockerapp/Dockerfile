@@ -1,4 +1,2 @@
 FROM nasven/nasven.js
-COPY appdef.js /appdef/
-COPY myapp.js  /appdef/
-RUN nasven.js -DnasvenNoRun=true -- /appdef
+RUN nasven.js -DnasvenNoRun=true -- /nasven/samples/spark && ln -s /nasven/samples/spark /appdef
