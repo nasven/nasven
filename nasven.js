@@ -26,6 +26,8 @@ if (arguments.length === 0 || arguments[0] === '-h') {
    print('An example of appdef.js is as follows:');
    print(" var appdef = {main:'app.js', options:'-scripting -doe ...', dependencies: ['groupId:artifactId:version', ...]}");
    print();
+   print("To simply download dependencies to your local Maven repository, run with -DnasvenNoRun=true");
+   print();
    exit(1);
 }
 
@@ -110,12 +112,14 @@ var Nasven = new (function () {
   
     $ARG.shift();
     newargs = '-- ' + $ARG.join(" ");
-  
-    var options = typeof appdef.options === 'undefined' ? '' : appdef.options;
-    exec("jjs -DskipNasven=true ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
+    var nasvenNoRun = java.lang.System.getProperty("nasvenNoRun") === "true";
+    if (nasvenNoRun === false) { 
+      var options = typeof appdef.options === 'undefined' ? '' : appdef.options;
+      exec("jjs -DskipNasven=true ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
+    }
   }
 
-  var skipNasven = Packages.java.lang.System.getProperty("skipNasven");
+  var skipNasven = java.lang.System.getProperty("skipNasven");
   if (skipNasven !== "true") {
     doMaven();
   }
