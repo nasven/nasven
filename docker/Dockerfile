@@ -22,6 +22,6 @@ RUN nasven.js -DnasvenNoRun=true -- /nasven/samples/asciidoctor && \
     nasven.js -DnasvenNoRun=true -- /nasven/samples/spark && \
     nasven.js -DnasvenNoRun=true -- /nasven/samples/tomcat
 
-ENTRYPOINT ["nasven.js", "--"]
+ENTRYPOINT ["/nasven/nasven.js", "--"]
 
 CMD ["/appdef"]
