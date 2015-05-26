@@ -5,6 +5,6 @@
  * Since: 2015
  */
 var appdef = {
-  main: "javafx.js",
+  main: "index.js",
   options: "-fx"
 }

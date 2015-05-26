@@ -5,7 +5,7 @@
  * Since: 2015
  */
 var appdef = {
-  main: "enzo.js",
+  main: "index.js",
   options: "-fx",
   dependencies: ["eu.hansolo.enzo:Enzo:0.2.4"]
 }

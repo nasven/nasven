@@ -5,7 +5,7 @@
  * Since: 2015
  */
 var appdef = {
-  main: "csv.js",
+  main: "index.js",
   options: "-scripting",
   dependencies: ["org.apache.commons:commons-csv:1.1"]
 }

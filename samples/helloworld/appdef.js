@@ -5,5 +5,5 @@
  * Since: 2015
  */
 var appdef = {
-  main: "helloworld.js"
+  main: "index.js"
 }

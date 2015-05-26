@@ -1,7 +1,7 @@
 var tomcatVersion = '8.0.21';
 
 var appdef = {
-  main: 'tomcat.js',
+  main: 'index.js',
   options: '-scripting', 
   dependencies: [
     "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}"
