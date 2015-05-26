@@ -1,0 +1,7 @@
+{
+    "name": "helloworld",
+    "version": "1.0.0",
+    "keywords": ["nashorn"],
+    "author": "@brunoborges",
+    "engine": "nashorn 1.8.0_45"
+}
