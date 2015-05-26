@@ -1,3 +1,5 @@
 #!/usr/bin/env sh 
+# Due to inconsistency between Unix systems, the full shebang (with jjs arguments) can't be used directly in nasven.js
+# Therefor, users must use this shell script to start nasven.js (both files must be in PATH, together).
 nasven_js="$(dirname $(realpath $0))/nasven.js"
 jjs --language=es6 -fv -doe -scripting -ot -strict "$nasven_js" -- "$@"
