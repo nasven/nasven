@@ -2,8 +2,8 @@ FROM java:8-jdk
 
 MAINTAINER Bruno Borges <bruno.borges@gmail.com>
 
-ENV MAVEN_VERSION "3.3.3"
-ENV MAVEN_URL "http://www.us.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.zip"
+ENV MAVEN_VERSION 3.3.3
+ENV MAVEN_URL http://www.us.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.zip
 
 RUN wget $MAVEN_URL -O maven3.zip && \
     unzip maven3.zip && \
@@ -22,4 +22,6 @@ RUN nasven.js -DnasvenNoRun=true -- /nasven/samples/asciidoctor && \
     nasven.js -DnasvenNoRun=true -- /nasven/samples/spark && \
     nasven.js -DnasvenNoRun=true -- /nasven/samples/tomcat
 
-CMD nasven.js -- /appdef
+ENTRYPOINT ["/nasven/nasven.js", "--"]
+
+CMD ["/appdef"]
