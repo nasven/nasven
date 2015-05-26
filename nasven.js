@@ -1,4 +1,4 @@
-#!/usr/bin/jjs -J-Dnashorn.args="--language=es6,-fv,-doe,-scripting,-ot,-strict" 
+#!/usr/bin/env jjs
 /* global Java, appdef, $ENV, $ARG, Packages, arguments, Files, Paths, Arrays, System */
 /*
  * Nasven.js
@@ -116,7 +116,7 @@ var Nasven = new (function () {
 
     function run(classpath, mainScript, options) {
         $ARG.shift();
-        newargs = '-- ' + $ARG.join(" ");
+        var newargs = '-- ' + $ARG.join(" ");
         var options = typeof options === 'undefined' ? '' : options;
         exec("jjs -DskipNasven=true -cp ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
     }
@@ -199,12 +199,3 @@ var Nasven = new (function () {
 });
 
 var console = {log:print};
-
-var require = function(module) {
-  if (module.indexOf('node_modules') > -1) {
-    print('requires node module. Loading...');
-    var appdef = Nasven.getAppDef(module);
-    print(appdef.name);
-    load(appdef.mainScriptPath);
-  }
-}

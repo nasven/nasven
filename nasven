@@ -1,0 +1,3 @@
+#!/usr/bin/env sh 
+nasven_js="$(dirname $(realpath $0))/nasven.js"
+jjs --language=es6 -fv -doe -scripting -ot -strict "$nasven_js" -- "$@"
