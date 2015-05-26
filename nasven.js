@@ -1,4 +1,4 @@
-#!/usr/bin/jjs -J-Dnashorn.args="-fv -doe -scripting -ot" 
+#!/usr/bin/jjs -J-Dnashorn.args="--language=es6,-fv,-doe,-scripting,-ot" 
 /*
  * Nasven.js
  * 
