@@ -12,7 +12,7 @@
  * 
  * To run this script, you must enable the Scripting extension of Nashorn:
  * 
- *   $ jjs -scripting nasven.js -- samples/jaxrs/appdef.js arg0 arg1 arg2
+ *   $ jjs -scripting nasven.js -- samples/jaxrs/package.json arg0 arg1 arg2
  *
  *   $ ./nasven.js -- samples/jaxrs arg0 arg1 arg2
  * 
