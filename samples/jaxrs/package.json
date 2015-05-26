@@ -1,5 +1,5 @@
 {
-    "name": "jaxrs.js",
+    "name": "jaxrs",
     "version": "1.0.0",
     "keywords": ["jaxrs", "nashorn"],
     "author": "@brunoborges",

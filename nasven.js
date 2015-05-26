@@ -1,4 +1,5 @@
-#!/usr/bin/jjs -J-Dnashorn.args="--language=es6,-fv,-doe,-scripting,-ot" 
+#!/usr/bin/jjs -J-Dnashorn.args="--language=es6,-fv,-doe,-scripting,-ot,-strict" 
+/* global Java, appdef, $ENV, $ARG, Packages, arguments, Files, Paths, Arrays, System */
 /*
  * Nasven.js
  * 
@@ -20,182 +21,190 @@
  * Since: April 2015
  */
 if (arguments.length === 0 || arguments[0] === '-h') {
-   print('Usage:');
-   print(' $> nasven.js -- [folder/ | folder/appdef.js]');
-   print();
-   print('An example of appdef.js is as follows:');
-   print(" var appdef = {main:'app.js', options:'-scripting -doe ...', dependencies: ['groupId:artifactId:version', ...]}");
-   print();
-   print("To simply download dependencies to your local Maven repository, run with -DnasvenNoRun=true");
-   print();
-   exit(1);
+    print('Usage:');
+    print(' $> nasven.js -- [folder/ | folder/package.json]');
+    print();
+    print("To download dependencies to your local Maven repository without executing your app, run with -DnasvenNoRun=true.");
+    print("Example:");
+    print("  ./nasven.js -DnasvenNoRun=true -- folder");
+    print();
+    exit(1);
 }
 
 var Nasven = new (function () {
-  var JavaString = Java.type("java.lang.String");
-  var Collectors = Java.type("java.util.stream.Collectors");
-  var Arrays = Java.type("java.util.Arrays");
-  var BufferedOutputStream = Java.type("java.io.BufferedOutputStream");
-  var Files = Java.type("java.nio.file.Files");
-  var Paths = Java.type("java.nio.file.Paths");
-  var Charset = Java.type("java.nio.charset.Charset");
-
-  function checkPathExists(path) {
-    if (Files.isReadable(path) === false) {
-        print("ERROR: File '${path}' cannot be found or is not readable.");
-        exit();
+    var jString = Java.type("java.lang.String");
+    var Collectors = Java.type("java.util.stream.Collectors");
+    var Arrays = Java.type("java.util.Arrays");
+    var Files = Java.type("java.nio.file.Files");
+    var Paths = Java.type("java.nio.file.Paths");
+    var System = Java.type("java.lang.System");
+    function checkPathExists(path) {
+        if (Files.isReadable(path) === false) {
+            print("ERROR: File '${path}' cannot be found or is not readable.");
+            exit();
+        }
     }
-  }
-  this.checkPathExists = checkPathExists;
+    this.checkPathExists = checkPathExists;
 
-  function doMaven() {
-    var appDefFile = Paths.get($ARG[0]).toAbsolutePath();
-    if (appDefFile.toFile().isFile() === false) {
-      appDefFile = Paths.get($ARG[0], 'appdef.js').toAbsolutePath();
+    function getAppDef(somePath) {
+        var packageFile = Paths.get(somePath).toAbsolutePath();
+        if (packageFile.toFile().isFile() === false) {
+            packageFile = Paths.get(somePath, 'package.json').toAbsolutePath();
+        }
+        var parentPath = packageFile.getParent();
+        checkPathExists(packageFile);
+        $ENV.PWD = parentPath.toString();
+        var appdef = loadAppDef(packageFile);
+
+        var mainScriptPath = Paths.get(parentPath, appdef.main).toAbsolutePath();
+        checkPathExists(mainScriptPath);
+        appdef.mainScriptPath = mainScriptPath;
+        return appdef;
     }
-    var parentPath = appDefFile.getParent();
-    checkPathExists(appDefFile);
-    $ENV.PWD = parentPath.toString();
+    this.getAppDef = getAppDef;
 
-    try {
-      load(appDefFile.toString());
-    } catch(e) { }
-
-    if (typeof appdef === 'undefined') {
-      print("ERROR: Nasven Application Definition 'appdef' object could not be found.");
-      exit();
-    } else if (typeof appdef.main === 'undefined' || appdef.main === '') {
-      print("ERROR: Your 'appdef' object in your ${$ARG[0]} config file does not define 'main'.")
-      exit();
+    function loadAppDef(packageFile) {
+        var appdef = JSON.parse(new jString(Files.readAllBytes(packageFile)));
+        if (typeof appdef === 'undefined') {
+            print("ERROR: Package Definition 'package.json' could not be found.");
+            exit();
+        } else if (typeof appdef.main === 'undefined' || appdef.main === 'index') {
+            appdef.main = 'index.js';
+        } else if (appdef.main === '') {
+            print("ERROR: Your app ${$ARG[0]} does not contain a valid application.");
+            exit();
+        }
+        return appdef;
     }
 
-    var mainScript = Paths.get(parentPath, appdef.main).toAbsolutePath();
-    checkPathExists(mainScript);
+    function buildClasspath(appdef) {
+        var classpath = '';
+        if (typeof appdef.dependencies !== 'undefined') {
+            var dependenciesCP = Arrays.stream(Java.to(appdef.dependencies.maven, "java.lang.String[]"))
+                    .map(function (dep) {
+                        return dep.split(":");
+                    })
+                    .map(function (tokens) {
+                        return "<dependency>" +
+                                "    <groupId>${tokens[0]}</groupId>" +
+                                "    <artifactId>${tokens[1]}</artifactId>" +
+                                "    <version>${tokens[2]}</version>" +
+                                "</dependency>"
+                    })
+                    .collect(Collectors.joining("\n"));
+            var pomTemplate =
+                    "<project>" +
+                    "  <modelVersion>4.0.0</modelVersion>" +
+                    "  <groupId>nasven</groupId>" +
+                    "  <artifactId>nasven-temp-artifact</artifactId>" +
+                    "  <packaging>pom</packaging>" +
+                    "  <version>1.0-SNAPSHOT</version>" +
+                    "  <name>nasven-temp-artifact</name>" +
+                    "  <dependencies>" +
+                    "    ${dependenciesCP}" +
+                    "  </dependencies>" +
+                    "</project>"
 
-    var classpath = '';
-    if (typeof appdef.dependencies !== 'undefined') {
-      var dependenciesCP = Arrays.stream(Java.to(appdef.dependencies, "java.lang.String[]"))
-        .map(function (dep) {return dep.split(":");})
-        .map(function (tokens) {
-          return <<EOF
-              <dependency>
-                  <groupId>${tokens[0]}</groupId>
-                  <artifactId>${tokens[1]}</artifactId>
-                  <version>${tokens[2]}</version>
-              </dependency>
-          EOF
-        })
-        .collect(Collectors.joining("\n"));
-  
-      var pomTemplate = <<EOF
-       <project>
-          <modelVersion>4.0.0</modelVersion>
-          <groupId>nasven</groupId>
-          <artifactId>nasven-temp-artifact</artifactId>
-          <packaging>pom</packaging>
-          <version>1.0-SNAPSHOT</version>
-          <name>nasven-temp-artifact</name>
-          <dependencies>
-            ${dependenciesCP}
-          </dependencies>
-       </project>
-      EOF
-  
-      var pomFile = Files.createTempFile('pom-', '-' + mainScript.toFile().getName() + '.xml').toAbsolutePath();
-      Files.write(pomFile, pomTemplate.getBytes());
-  
-      var cpFile = Paths.get(parentPath, mainScript.toFile().getName() + '.cp').toAbsolutePath();
-      exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify");
-      classpath = '-cp ' + new JavaString(Files.readAllBytes(cpFile));
-      Files.delete(cpFile);
+            var pomFile = Files.createTempFile('pom-', '-' + appdef.name + '.xml').toAbsolutePath();
+            Files.write(pomFile, pomTemplate.getBytes());
+            var cpFile = Files.createTempFile('cp-', appdef.name + '.cp').toAbsolutePath();
+            exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify");
+            classpath = new jString(Files.readAllBytes(cpFile));
+            return classpath;
+        }
     }
-  
-    $ARG.shift();
-    newargs = '-- ' + $ARG.join(" ");
-    var nasvenNoRun = java.lang.System.getProperty("nasvenNoRun") === "true";
-    if (nasvenNoRun === false) { 
-      var options = typeof appdef.options === 'undefined' ? '' : appdef.options;
-      exec("jjs -DskipNasven=true ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
+
+    function run(classpath, mainScript, options) {
+        $ARG.shift();
+        newargs = '-- ' + $ARG.join(" ");
+        var options = typeof options === 'undefined' ? '' : options;
+        exec("jjs -DskipNasven=true -cp ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
     }
-  }
 
-  var skipNasven = java.lang.System.getProperty("skipNasven");
-  if (skipNasven !== "true") {
-    doMaven();
-  }
-
-  function exec(args) {
-    __exec_input(args, "");
-  }
-  this.exec = exec;
-
-  function __exec_input(args, input) {
-     var StringArray = Java.type("java.lang.String[]");
-     var JavaString = Java.type("java.lang.String");
-     var CharArray = Java.type("char[]");
-     var ProcessBuilder = Java.type("java.lang.ProcessBuilder");
-     var Thread = Java.type("java.lang.Thread");
-     var File = Java.type("java.io.File");
-     var InputStreamReader = Java.type("java.io.InputStreamReader");
-     var OutputStreamWriter = Java.type("java.io.OutputStreamWriter");
-  
-     args = Java.to(args.split(' '), StringArray);
-     input = String(input);
-     var processBuilder = new ProcessBuilder(args);
-  
-     var environment = processBuilder.environment();
-     environment.clear();
-  
-     for (var key in $ENV) {
-         var value = $ENV[key];
-         if (key == "PWD") {
-             processBuilder.directory(new File(String(value)));
-         }
-
-         environment.put(String(key), String(value));
-     }
-
-     var process = processBuilder.start();
-
-     var outThread = new Thread(
-         function() {
-           var buffer = new CharArray(1024);
-           var inputStream = new InputStreamReader(process.getInputStream());
-           var length;
-           while ((length = inputStream.read(buffer, 0, buffer.length)) != -1) {
-               print(new JavaString(buffer, 0, length));
-           }
-           inputStream.close();
-       }
-     );
-
-     var errThread = new Thread(
-         function() {
-           var buffer = new CharArray(1024);
-           var inputStream = new InputStreamReader(process.getErrorStream());
-           var length;
-           while ((length = inputStream.read(buffer, 0, buffer.length)) != -1) {
-               print(new JavaString(buffer, 0, length));
-           }
-           inputStream.close();
-       }
-     );
-
-     outThread.start();
-     errThread.start();
-
-     var outputStream = new OutputStreamWriter(process.getOutputStream());
-     outputStream.write(input, 0, input.length());
-     outputStream.close();
-
-     var exit = process.waitFor();
-     outThread.join();
-     errThread.join();
-  }
- 
-  this.daemon = function() {
-    while(true) {
-      Java.type("java.lang.Thread").sleep(1000);
+    var skipNasven = System.getProperty("skipNasven");
+    if (skipNasven !== "true") {
+        var appdef = getAppDef($ARG[0]);
+        var classpath = buildClasspath(appdef);
+        var nasvenNoRun = System.getProperty("nasvenNoRun") === "true";
+        if (nasvenNoRun === false) {
+            run(classpath, appdef.mainScriptPath, appdef.options);
+        }
     }
-  }
+
+    function exec(args) {
+        __exec_input(args, "");
+    }
+    this.exec = exec;
+    function __exec_input(args, input) {
+        var StringArray = Java.type("java.lang.String[]");
+        var jString = Java.type("java.lang.String");
+        var CharArray = Java.type("char[]");
+        var ProcessBuilder = Java.type("java.lang.ProcessBuilder");
+        var Thread = Java.type("java.lang.Thread");
+        var File = Java.type("java.io.File");
+        var InputStreamReader = Java.type("java.io.InputStreamReader");
+        var OutputStreamWriter = Java.type("java.io.OutputStreamWriter");
+        args = Java.to(args.split(' '), StringArray);
+        input = String(input);
+        var processBuilder = new ProcessBuilder(args);
+        var environment = processBuilder.environment();
+        environment.clear();
+        for (var key in $ENV) {
+            var value = $ENV[key];
+            if (key === "PWD") {
+                processBuilder.directory(new File(String(value)));
+            }
+
+            environment.put(String(key), String(value));
+        }
+
+        var process = processBuilder.start();
+        var outThread = new Thread(
+                function () {
+                    var buffer = new CharArray(1024);
+                    var inputStream = new InputStreamReader(process.getInputStream());
+                    var length;
+                    while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
+                        print(new jString(buffer, 0, length));
+                    }
+                    inputStream.close();
+                }
+        );
+        var errThread = new Thread(
+                function () {
+                    var buffer = new CharArray(1024);
+                    var inputStream = new InputStreamReader(process.getErrorStream());
+                    var length;
+                    while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
+                        print(new jString(buffer, 0, length));
+                    }
+                    inputStream.close();
+                }
+        );
+        outThread.start();
+        errThread.start();
+        var outputStream = new OutputStreamWriter(process.getOutputStream());
+        outputStream.write(input, 0, input.length());
+        outputStream.close();
+        var exit = process.waitFor();
+        outThread.join();
+        errThread.join();
+    }
+
+    this.daemon = function () {
+        while (true) {
+            Java.type("java.lang.Thread").sleep(1000);
+        }
+    };
 });
+
+var console = {log:print};
+
+var require = function(module) {
+  if (module.indexOf('node_modules') > -1) {
+    print('requires node module. Loading...');
+    var appdef = Nasven.getAppDef(module);
+    print(appdef.name);
+    load(appdef.mainScriptPath);
+  }
+}

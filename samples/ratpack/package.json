@@ -1,0 +1,12 @@
+{
+    "name": "ratpack",
+    "version": "1.0.0",
+    "keywords": ["ratpack", "nashorn"],
+    "author": "@brunoborges",
+    "contributors": [],
+    "dependencies": {
+        "maven": ["org.slf4j:slf4j-simple:1.7.10",
+                 "io.ratpack:ratpack-core:0.9.15"]
+    },
+    "engine": "nashorn 1.8.0_45"
+}

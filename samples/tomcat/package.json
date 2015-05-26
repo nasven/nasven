@@ -1,0 +1,12 @@
+{
+    "name": "tomcat",
+    "version": "1.0.0",
+    "keywords": ["tomcat", "nashorn"],
+    "author": "@brunoborges",
+    "contributors": [],
+    "dependencies": {
+        "maven": ["org.apache.tomcat.embed:tomcat-embed-core:8.0.21"
+                    , "org.apache.tomcat.embed:tomcat-embed-logging-juli:8.0.21"]
+    },
+    "engine": "nashorn 1.8.0_45"
+}

@@ -1,0 +1,11 @@
+{
+    "name": "mqtt",
+    "version": "1.0.0",
+    "keywords": ["mqtt", "nashorn"],
+    "author": "@brunoborges",
+    "contributors": [],
+    "dependencies": {
+        "maven": ["org.fusesource.mqtt-client:mqtt-client:1.10"]
+    },
+    "engine": "nashorn 1.8.0_45"
+}

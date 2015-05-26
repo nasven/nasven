@@ -1,0 +1,11 @@
+{
+    "name": "spark",
+    "version": "1.0.0",
+    "keywords": ["spark", "nashorn"],
+    "author": "@brunoborges",
+    "contributors": [],
+    "dependencies": {
+        "maven": ["com.sparkjava:spark-core:2.1"]
+    },
+    "engine": "nashorn 1.8.0_45"
+}

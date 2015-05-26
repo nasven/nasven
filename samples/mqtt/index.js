@@ -9,10 +9,9 @@ con.subscribe([new p.Topic("presence", p.QoS.AT_LEAST_ONCE)]);
 print("Subscribed! Now publishing... ");
 con.publish("presence", "Hello Nashorn!".getBytes(), p.QoS.AT_LEAST_ONCE, false);
 print("Published! Now receiving...");
-var message = connection.receive();
+var message = con.receive();
 print("Received! --> " + new java.lang.String(message.getPayload()));
 print("Now disconnecting...");
 message.ack();
 con.disconnect();
 print("Disconnected");
-
