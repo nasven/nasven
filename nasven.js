@@ -1,4 +1,4 @@
-#!/usr/bin/env jjs
+#!/usr/bin/jjs -J-Dnashorn.args=-fv -doe -scripting -ot -strict --language=es6
 /* global Java, appdef, $ENV, $ARG, Packages, arguments, Files, Paths, Arrays, System */
 /*
  * Nasven.js
@@ -38,6 +38,7 @@ var Nasven = new (function () {
     var Files = Java.type("java.nio.file.Files");
     var Paths = Java.type("java.nio.file.Paths");
     var System = Java.type("java.lang.System");
+
     function checkPathExists(path) {
         if (Files.isReadable(path) === false) {
             print("ERROR: File '${path}' cannot be found or is not readable.");
