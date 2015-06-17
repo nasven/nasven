@@ -13,10 +13,9 @@ RUN wget -O pcurl.sh "https://raw.githubusercontent.com/brunoborges/pcurl/master
     unzip $MAVEN_FILE && \
     rm $MAVEN_FILE && \
     git clone --depth=1 https://github.com/nasven/nasven.git && \
-    chmod a+x /nasven/nasven.js && \
-    apt-get autoremove -y --purge wget curl unzip zip
-
-RUN nasven.js -DnasvenNoRun=true -- /nasven/samples/asciidoctor && \
+    chmod a+x /nasven/nasven /nasven/nasven.js && \
+    apt-get autoremove -y --purge wget curl unzip zip && \
+    nasven.js -DnasvenNoRun=true -- /nasven/samples/asciidoctor && \
     nasven.js -DnasvenNoRun=true -- /nasven/samples/csv && \
     nasven.js -DnasvenNoRun=true -- /nasven/samples/jaxrs && \
     nasven.js -DnasvenNoRun=true -- /nasven/samples/jetty && \
@@ -27,4 +26,4 @@ RUN nasven.js -DnasvenNoRun=true -- /nasven/samples/asciidoctor && \
 
 ENTRYPOINT ["/nasven/nasven"]
 
-CMD ["/appdef"]
+CMD ["/app"]
