@@ -5,6 +5,6 @@ To run a specific path (sample) inside the container, you must do:
 
         # docker run -it nasven/nasven.js /nasven/samples/jaxrs
 
-You can also map directly to a directory in your host system:
+You can also map directly to a directory in your host system containing a nasven.js project (package.json)::
 
-        # sudo docker run -it -v `pwd`/samples/hellodocker:/app nasven/nasven.js
+        # sudo docker run -it -v `pwd`:/app nasven/nasven.js
