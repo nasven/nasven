@@ -27,4 +27,4 @@ RUN nasven.js -DnasvenNoRun=true -- /nasven/samples/asciidoctor && \
 
 ENTRYPOINT ["/nasven/nasven"]
 
-CMD ["/appdef"]
+CMD ["/app"]
