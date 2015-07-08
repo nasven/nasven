@@ -8,3 +8,7 @@ To run a specific path (sample) inside the container, you must do:
 You can also map directly to a directory in your host system containing a nasven.js project (package.json)::
 
         # sudo docker run -it -v `pwd`:/app nasven/nasven.js
+
+If you want to pass arguments to your mounted /app project, you will have to indicate '/app' as the first argument, for example:
+
+        # sudo docker run -it -v `pwd`:/app nasven/nasven.js /app arg0 arg1 ...
