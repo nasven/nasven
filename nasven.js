@@ -1,4 +1,3 @@
-#!/usr/bin/jjs -J-Dnashorn.args=-fv -doe -scripting -ot -strict --language=es6
 /* global Java, appdef, $ENV, $ARG, Packages, arguments, Files, Paths, Arrays, System */
 /*
  * Nasven.js
@@ -20,7 +19,7 @@
  * Version: 1.0
  * Since: April 2015
  */
-if (arguments.length === 0 || arguments[0] === '-h') {
+if (java.lang.System.getProperty("skipNasven") !== 'true' && (arguments.length === 0 || arguments[0] === '-h')) {
     print('Usage:');
     print(' $> nasven.js -- [folder/ | folder/package.json]');
     print();
@@ -109,7 +108,9 @@ var Nasven = new (function () {
             var pomFile = Files.createTempFile('pom-', '-' + appdef.name + '.xml').toAbsolutePath();
             Files.write(pomFile, pomTemplate.getBytes());
             var cpFile = Files.createTempFile('cp-', appdef.name + '.cp').toAbsolutePath();
-            exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify");
+            print('[NASVEN] Building temporary Apache Maven project to find dependencies ...');
+            exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify", true);
+            print('[NASVEN] Done!');
             classpath = new jString(Files.readAllBytes(cpFile));
             return classpath;
         }
@@ -117,7 +118,7 @@ var Nasven = new (function () {
 
     function run(classpath, mainScript, options) {
         $ARG.shift();
-        var newargs = '-- ' + $ARG.join(" ");
+        var newargs = $ARG.length > 0 ? '-- ' + $ARG.join(" ") : '';
         var options = typeof options === 'undefined' ? '' : options;
         exec("jjs -DskipNasven=true -cp ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
     }
@@ -128,15 +129,17 @@ var Nasven = new (function () {
         var classpath = buildClasspath(appdef);
         var nasvenNoRun = System.getProperty("nasvenNoRun") === "true";
         if (nasvenNoRun === false) {
+            print('[NASVEN] About to run your nasven.js application under '+appdef.mainScriptPath+' ...');
+            print();
             run(classpath, appdef.mainScriptPath, appdef.options);
+            print('[NASVEN] Application successfuly executed.');
         }
     }
-
-    function exec(args) {
-        __exec_input(args, "");
+    function exec(args,suppress) {
+        __exec_input(args, "", typeof suppress === 'undefined' ? false : suppress);
     }
     this.exec = exec;
-    function __exec_input(args, input) {
+    function __exec_input(args, input, suppress) {
         var StringArray = Java.type("java.lang.String[]");
         var jString = Java.type("java.lang.String");
         var CharArray = Java.type("char[]");
@@ -166,7 +169,8 @@ var Nasven = new (function () {
                     var inputStream = new InputStreamReader(process.getInputStream());
                     var length;
                     while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
-                        print(new jString(buffer, 0, length));
+                        if (suppress === false)
+                          print(new jString(buffer, 0, length));
                     }
                     inputStream.close();
                 }
@@ -177,6 +181,7 @@ var Nasven = new (function () {
                     var inputStream = new InputStreamReader(process.getErrorStream());
                     var length;
                     while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
+                        if (suppress === false)
                         print(new jString(buffer, 0, length));
                     }
                     inputStream.close();

@@ -5,7 +5,8 @@
     "author": "@brunoborges",
     "contributors": [],
     "dependencies": {
-        "maven": ["org.glassfish.jersey.core:jersey-client:2.17",
+        "maven": [
+            "org.glassfish.jersey.core:jersey-client:2.17",
             "org.glassfish.jersey.connectors:jersey-grizzly-connector:2.17"]
     },
     "engine": "nashorn 1.8.0_45"
