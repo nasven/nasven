@@ -33,4 +33,4 @@ You can read arguments inside your code with ''arguments[0]'', ''arguments[1]'',
 Check the **samples** folder for examples of **package.json** files with Maven dependencies. 
 
 ## License
-GPL+CDDL
+MIT
