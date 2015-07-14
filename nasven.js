@@ -11,9 +11,7 @@
  * 
  * To run this script, you must enable the Scripting extension of Nashorn:
  * 
- *   $ jjs -scripting nasven.js -- samples/jaxrs/package.json arg0 arg1 arg2
- *
- *   $ ./nasven.js -- samples/jaxrs arg0 arg1 arg2
+ *   $ ./nasven samples/jaxrs arg0 arg1 arg2
  * 
  * Author: Bruno Borges (@brunoborges)
  * Version: 1.0
@@ -21,11 +19,13 @@
  */
 if (java.lang.System.getProperty("skipNasven") !== 'true' && (arguments.length === 0 || arguments[0] === '-h')) {
     print('Usage:');
-    print(' $> nasven.js -- [folder/ | folder/package.json]');
+    print(' $> nasven [folder/ | folder/package.json]');
     print();
-    print("To download dependencies to your local Maven repository without executing your app, run with -DnasvenNoRun=true.");
+    print("To download dependencies to your local Maven repository without executing your app, set environment variable NASVEN_NORUN=true.");
     print("Example:");
-    print("  ./nasven.js -DnasvenNoRun=true -- folder");
+    print(" $> NASVEN_NORUN=true ./nasven folder arg0 arg1");
+    print();
+    print("To debug Apache Maven, set environment variable NASVEN_DEBUG=true.");
     print();
     exit(1);
 }
@@ -109,7 +109,8 @@ var Nasven = new (function () {
             Files.write(pomFile, pomTemplate.getBytes());
             var cpFile = Files.createTempFile('cp-', appdef.name + '.cp').toAbsolutePath();
             print('[NASVEN] Building temporary Apache Maven project to find dependencies ...');
-            exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify", true);
+            var debugNasven = $ENV['NASVEN_DEBUG'] === 'true';
+            exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify", !debugNasven);
             print('[NASVEN] Done!');
             classpath = new jString(Files.readAllBytes(cpFile));
             return classpath;
@@ -117,24 +118,31 @@ var Nasven = new (function () {
     }
 
     function run(classpath, mainScript, options) {
-        $ARG.shift();
+        $ARG.shift(); // ignore first argument
         var newargs = $ARG.length > 0 ? '-- ' + $ARG.join(" ") : '';
         var options = typeof options === 'undefined' ? '' : options;
         exec("jjs -DskipNasven=true -cp ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
     }
 
-    var skipNasven = System.getProperty("skipNasven");
-    if (skipNasven !== "true") {
+    //
+    // Main body 
+    //
+    var skipNasven = System.getProperty("skipNasven", "false");
+    if (skipNasven === "false") {
         var appdef = getAppDef($ARG[0]);
         var classpath = buildClasspath(appdef);
-        var nasvenNoRun = System.getProperty("nasvenNoRun") === "true";
+        var nasvenNoRun = System.getProperty("nasvenNoRun", $ENV['NASVEN_NORUN']) === "true";
         if (nasvenNoRun === false) {
-            print('[NASVEN] About to run your nasven.js application under '+appdef.mainScriptPath+' ...');
-            print();
+            // if nasvenNoRun is true, it will only download Maven dependencies
+            print('[NASVEN] About to run your nasven.js application under '+appdef.mainScriptPath+' ... \n');
             run(classpath, appdef.mainScriptPath, appdef.options);
             print('[NASVEN] Application successfuly executed.');
         }
     }
+
+    //
+    // Exec with on-demand output
+    //
     function exec(args,suppress) {
         __exec_input(args, "", typeof suppress === 'undefined' ? false : suppress);
     }
@@ -158,10 +166,8 @@ var Nasven = new (function () {
             if (key === "PWD") {
                 processBuilder.directory(new File(String(value)));
             }
-
             environment.put(String(key), String(value));
         }
-
         var process = processBuilder.start();
         var outThread = new Thread(
                 function () {
@@ -169,38 +175,30 @@ var Nasven = new (function () {
                     var inputStream = new InputStreamReader(process.getInputStream());
                     var length;
                     while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
-                        if (suppress === false)
-                          print(new jString(buffer, 0, length));
+                        if (suppress === false) print(new jString(buffer, 0, length));
                     }
                     inputStream.close();
                 }
         );
-        var errThread = new Thread(
-                function () {
-                    var buffer = new CharArray(1024);
-                    var inputStream = new InputStreamReader(process.getErrorStream());
-                    var length;
-                    while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
-                        if (suppress === false)
-                        print(new jString(buffer, 0, length));
-                    }
-                    inputStream.close();
-                }
-        );
-        outThread.start();
-        errThread.start();
+        var errThread = new Thread(function () {
+            var buffer = new CharArray(1024);
+            var inputStream = new InputStreamReader(process.getErrorStream());
+            var length;
+            while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
+                if (suppress === false) print(new jString(buffer, 0, length));
+            }
+            inputStream.close();
+        });
+        outThread.start(); errThread.start();
         var outputStream = new OutputStreamWriter(process.getOutputStream());
         outputStream.write(input, 0, input.length());
         outputStream.close();
         var exit = process.waitFor();
-        outThread.join();
-        errThread.join();
+        outThread.join(); errThread.join();
     }
 
     this.daemon = function () {
-        while (true) {
-            Java.type("java.lang.Thread").sleep(1000);
-        }
+        while (true) Thread.sleep(1000);
     };
 });
 
