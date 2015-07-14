@@ -1,6 +1,10 @@
 Nasven.js
 =====
-This project allows developers to code Javascript applications that run on top of the Java Platform and that may have dependencies on Apache Maven artifacts. Developers can build pure server-side applications, shell scripts, or even desktop applications with JavaFX. Any Maven dependency will be downloaded and configured in the classpath automatically.
+What is Nasven? Quoting [Lukas Eder](https://twitter.com/lukaseder):
+
+        "Nasven = Nashorn + Maven. A tool to get Maven artifacts in scope for Nashorn script execution."
+
+Nasven allows developers to code Javascript applications that run on top of the Java Platform (using Nashorn engine) and that may have dependencies on Apache Maven artifacts. Developers can build pure server-side applications, shell scripts, or even JavaFX desktop applications, and any Maven dependency will be downloaded and configured in the classpath automatically.
 
 ## Requirements
 You must have installed in your environment the following softwares:
@@ -10,7 +14,7 @@ You must have installed in your environment the following softwares:
 ## Docker
 You can use the Docker image **nasven/nasven.js** published in Docker Hub.
 
-        # sudo docker run -it nasven/nasven.js -- /nasven/samples/helloworld
+        # sudo docker run -it nasven/nasven.js /nasven/samples/helloworld
 
 You can also map and run a local (on host) application:
 
