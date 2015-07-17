@@ -1,7 +1,6 @@
 #!/bin/bash
 #
-#  Copyright 2015 Bruno Borges (@brunoborges)
-#  Liense: MIT
+#  Based on GVM shell installer at http://get.gvmtool.net/
 #
 NASVEN_DIR="${HOME}/.nasven"
 
