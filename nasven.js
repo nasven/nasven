@@ -9,10 +9,6 @@
  * 
  * See samples for more information.
  * 
- * To run this script, you must enable the Scripting extension of Nashorn:
- * 
- *   $ ./nasven samples/jaxrs arg0 arg1 arg2
- * 
  * Author: Bruno Borges (@brunoborges)
  * Version: 1.0
  * Since: April 2015
