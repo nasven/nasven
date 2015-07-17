@@ -15,7 +15,7 @@ RUN wget -O pcurl.sh "https://raw.githubusercontent.com/brunoborges/pcurl/master
     rm pcurl.sh && \
     unzip $MAVEN_FILE && \
     rm $MAVEN_FILE && \
-    git clone --depth=1 https://github.com/nasven/nasven.git && \
+    git clone --recursive --depth=1 https://github.com/nasven/nasven.git && \
     chmod a+x /nasven/nasven /nasven/nasven.js && \
     apt-get autoremove -y --purge wget curl unzip zip && \
     nasven /nasven/samples/asciidoctor && \
