@@ -23,7 +23,7 @@ if (java.lang.System.getProperty("skipNasven") !== 'true' && (arguments.length =
     print();
     print("To download dependencies to your local Maven repository without executing your app, set environment variable NASVEN_NORUN=true.");
     print("Example:");
-    print(" $> NASVEN_NORUN=true ./nasven folder arg0 arg1");
+    print(" $> NASVEN_NORUN=true nasven folder arg0 arg1");
     print();
     print("To debug Apache Maven, set environment variable NASVEN_DEBUG=true.");
     print();
