@@ -37,6 +37,7 @@ var Nasven = new (function () {
     var Files = Java.type("java.nio.file.Files");
     var Paths = Java.type("java.nio.file.Paths");
     var System = Java.type("java.lang.System");
+    var Thread = Java.type("java.lang.Thread");
 
     function checkPathExists(path) {
         if (Files.isReadable(path) === false) {
@@ -152,7 +153,6 @@ var Nasven = new (function () {
         var jString = Java.type("java.lang.String");
         var CharArray = Java.type("char[]");
         var ProcessBuilder = Java.type("java.lang.ProcessBuilder");
-        var Thread = Java.type("java.lang.Thread");
         var File = Java.type("java.io.File");
         var InputStreamReader = Java.type("java.io.InputStreamReader");
         var OutputStreamWriter = Java.type("java.io.OutputStreamWriter");
