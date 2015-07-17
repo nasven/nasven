@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+#  Copyright 2015 Bruno Borges (@brunoborges)
+#  Liense: MIT
+#
+NASVEN_DIR="${HOME}/.nasven"
+
+if [ -d "${NASVEN_DIR}" ]; then
+	echo " Nasven.js was found at:"
+	echo "   > ${NASVEN_DIR}"
+	echo ""
+	echo " Run the following to upgrade."
+  echo "    $ nasven upgrade"
+	echo ""
+	exit 0
+fi
+
+if [ -z $(which unzip) ]; then
+	echo "Unzip not found."
+	echo "Install unzip first on your system and then run this again."
+	echo ""
+	exit 0
+fi
+
+if [ -z $(which curl) ]; then
+	echo "curl not found."
+	echo "Install curl first on your system and then run this again."
+	echo ""
+	exit 0
+fi
+
+echo "Installing Nasven.js..."
+mkdir ${NASVEN_DIR}
+
+echo "Downloading Nasven.js ZIP bundle from GitHub ..."
+curl -sSL https://github.com/nasven/nasven/archive/master.zip > nasven-master.zip
+
+echo "Extracting zip archive..."
+unzip -qo nasven-master.zip -d ${NASVEN_DIR}/
+mv ${NASVEN_DIR}/nasven-master/* ${NASVEN_DIR}/
+rm -rf ${NASVEN_DIR}/nasven-master
+rm nasven-master.zip
+
+echo "Configuring environment..."
+
+NASVEN_SNIPPET=$(cat << EOF
+export PATH=$NASVEN_DIR:$PATH
+EOF
+)
+
+bash_profile="${HOME}/.bash_profile"
+profile="${HOME}/.profile"
+bashrc="${HOME}/.bashrc"
+
+echo "Updating shell profiles..."
+if [ ! -f "${bash_profile}" -a ! -f "${profile}" ]; then
+	echo "#!/bin/bash" > "${bash_profile}"
+	echo "${NASVEN_SNIPPET}" >> "${bash_profile}"
+	echo "Created and initialised ${bash_profile}"
+else
+	if [ -f "${bash_profile}" ]; then
+		if [ -z `grep 'NASVEN' "${bash_profile}"` ]; then
+      echo "" >> "${bash_profile}"
+			echo "${NASVEN_SNIPPET}" >> "${bash_profile}"
+			echo "Updated existing ${bash_profile}"
+		fi
+	fi
+
+	if [ -f "${profile}" ]; then
+		if [ -z `grep 'NASVEN' "${profile}"` ]; then
+      echo "" >> "${profile}"
+			echo "${NASVEN_SNIPPET}" >> "${profile}"
+			echo "Updated existing ${profile}"
+		fi
+	fi
+fi
+
+if [ ! -f "${bashrc}" ]; then
+	echo "#!/bin/bash" > "${bashrc}"
+	echo "${NASVEN_SNIPPET}" >> "${bashrc}"
+	echo "Created and initialised ${bashrc}"
+else
+	if [ -z `grep 'NASVEN' "${bashrc}"` ]; then
+    echo "" >> "${bashrc}"
+		echo "${NASVEN_SNIPPET}" >> "${bashrc}"
+		echo "Updated existing ${bashrc}"
+	fi
+fi
+
+# Done
+echo "Nasven.js was installed successfuly."
