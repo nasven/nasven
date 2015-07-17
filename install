@@ -28,6 +28,20 @@ if [ -z $(which curl) ]; then
 	exit 0
 fi
 
+if [ -z $(which mvn) ]; then
+  echo "mvn not found."
+  echo "Install Apache Maven 3.+ on your system and then run this again."
+  echo ""
+  exit 0
+fi
+
+if [ -z $(which jjs) ]; then
+  echo "jjs not found."
+  echo "Install Java SE 8 on your system ad then run this again."
+  echo ""
+  exit 0
+fi
+
 echo "Installing Nasven.js..."
 mkdir ${NASVEN_DIR}
 
