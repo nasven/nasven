@@ -7,16 +7,10 @@
 var RatpackServer = Packages.ratpack.server.RatpackServer;
 
 RatpackServer.start(function (server) { server 
-  .handlers(function (chain) { chain
-    .get(function (ctx) {
-      print('Rendering hello world');
-      ctx.render("Hello World!")
-    })
-    .get(":name", function (ctx) {
-      var name = ctx.getPathTokens().get("name");
-      print("Rendering hello ${name}");
-      ctx.render("Hello " + name + "!")
-    })
+  .handlers(function (chain) { 
+     chain
+    .get(function(ctx){load('renderWorld.js')(ctx);})
+    .get(":name",function(ctx){load('renderName.js')(ctx);});
   })
 });
 
