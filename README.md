@@ -11,6 +11,11 @@ You must have installed in your environment the following softwares:
  - Java SE 8
  - Apache Maven 3+
 
+## Installation
+You can install on your Linux-based environment with the following command:
+
+        $ curl -sSL j.mp/installnasven | sh
+
 ## Docker
 You can use the Docker image **nasven/nasven.js** published in Docker Hub.
 
