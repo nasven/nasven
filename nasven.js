@@ -58,7 +58,7 @@ var Nasven = new (function () {
         appdef.mainScriptPath = mainScriptPath;
         return appdef;
     }
-    this.getAppDef = getAppDef;
+    // this.getAppDef = getAppDef;
 
     function loadAppDef(packageFile) {
         var appdef = JSON.parse(new jString(Files.readAllBytes(packageFile)));
@@ -118,12 +118,12 @@ var Nasven = new (function () {
         $ARG.shift(); // ignore first argument
         var newargs = $ARG.length > 0 ? '-- ' + $ARG.join(" ") : '';
         var options = typeof options === 'undefined' ? '' : options;
-        exec("jjs -DskipNasven=true -cp ${classpath} ${options} ${__DIR__}/nasven.js ${mainScript} ${newargs}");
+        print('[NASVEN] Calling jjs for your application ...');
+        var command = "jjs ${options} -DskipNasven=true -cp ${classpath} ${__DIR__}/nasven.js ${mainScript} ${newargs}";
+        exec(command);
     }
 
-    //
     // Main body 
-    //
     var skipNasven = System.getProperty("skipNasven", "false");
     if (skipNasven === "false") {
         var appdef = getAppDef($ARG[0]);
@@ -137,13 +137,12 @@ var Nasven = new (function () {
         }
     }
 
-    //
     // Exec with on-demand output
-    //
     function exec(args,suppress) {
         __exec_input(args, "", typeof suppress === 'undefined' ? false : suppress);
     }
     this.exec = exec;
+
     function __exec_input(args, input, suppress) {
         var StringArray = Java.type("java.lang.String[]");
         var jString = Java.type("java.lang.String");
@@ -170,8 +169,8 @@ var Nasven = new (function () {
                     var buffer = new CharArray(1024);
                     var inputStream = new InputStreamReader(process.getInputStream());
                     var length;
-                    while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
-                        if (suppress === false) print(new jString(buffer, 0, length));
+                    while ((length = inputStream.read(buffer,0,buffer.length)) !== -1) {
+                        if (suppress === false) print(new jString(buffer,0,length-1));
                     }
                     inputStream.close();
                 }
@@ -180,8 +179,8 @@ var Nasven = new (function () {
             var buffer = new CharArray(1024);
             var inputStream = new InputStreamReader(process.getErrorStream());
             var length;
-            while ((length = inputStream.read(buffer, 0, buffer.length)) !== -1) {
-                if (suppress === false) print(new jString(buffer, 0, length));
+            while ((length = inputStream.read(buffer,0,buffer.length)) !== -1) {
+                if (suppress === false) print(new jString(buffer,0,length-1));
             }
             inputStream.close();
         });
@@ -196,6 +195,52 @@ var Nasven = new (function () {
     this.daemon = function () {
         while (true) Thread.sleep(1000);
     };
+
+    var ENTRY_MODIFY = java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+    var requiredFiles = new java.util.HashMap();
+    var watchingThread;
+    function require(file) {
+        var fileToWatch = Paths.get($ENV.PWD, file).toAbsolutePath();
+        print("[NASVEN] Requiring file: ${fileToWatch} ...");
+        if (requiredFiles.containsKey(file) === true) {
+           print('[NASVEN] File already required.');
+           return;
+        }
+        load(file);
+        var pwdPath = Paths.get($ENV.PWD);
+        var watchService = pwdPath.getFileSystem().newWatchService();
+        fileToWatch.getParent().register(watchService, ENTRY_MODIFY);
+        requiredFiles.put(file, fileToWatch);
+        print('[NASVEN] File successfuly required.');
+        if (typeof watchingThread === 'undefined') {
+            watchingThread = new Thread(function() {
+                while(true) {
+                    var key = watchService.take();
+                    var modifiedFiles = new java.util.HashSet();
+                    for each(var watchEvent in key.pollEvents()) {
+                      var kind = watchEvent.kind();
+                      if (kind === ENTRY_MODIFY) {
+                          var fileName = watchEvent.context();
+                          modifiedFiles.add(fileName.toAbsolutePath());
+                      }
+                    }
+                    modifiedFiles
+                        .stream()
+                        .filter(function(f)requiredFiles.containsValue(f))
+                        .map(function(f)f.toString())
+                        .forEach(load);
+                    var valid = key.reset();
+                    if (!valid) break;
+                }
+            })
+            watchingThread.setDaemon(true);
+            watchingThread.start();
+            print('[NASVEN] WatchService started for required files.');
+        }
+    }
+    this.require = require;
+    
 });
 
 var console = {log:print};
+var require = Nasven.require;
