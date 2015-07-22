@@ -2,7 +2,8 @@ Nasven.js
 =====
 What is Nasven? Quoting [Lukas Eder](https://twitter.com/lukaseder):
 
-        "Nasven = Nashorn + Maven. A tool to get Maven artifacts in scope for Nashorn script execution."
+        "Nasven = Nashorn + Maven. A tool to get Maven artifacts 
+                  in scope for Nashorn script execution."
 
 Nasven allows developers to code Javascript applications that run on top of the Java Platform (using Nashorn engine) and that may have dependencies on Apache Maven artifacts. Developers can build pure server-side applications, shell scripts, or even JavaFX desktop applications, and any Maven dependency will be downloaded and configured in the classpath automatically.
 
