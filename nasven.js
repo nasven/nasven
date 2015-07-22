@@ -41,7 +41,6 @@ var Nasven = new (function () {
             exit();
         }
     }
-    this.checkPathExists = checkPathExists;
 
     function getAppDef(somePath) {
         var packageFile = Paths.get(somePath).toAbsolutePath();
@@ -58,7 +57,6 @@ var Nasven = new (function () {
         appdef.mainScriptPath = mainScriptPath;
         return appdef;
     }
-    // this.getAppDef = getAppDef;
 
     function loadAppDef(packageFile) {
         var appdef = JSON.parse(new jString(Files.readAllBytes(packageFile)));
@@ -119,7 +117,7 @@ var Nasven = new (function () {
         var newargs = $ARG.length > 0 ? '-- ' + $ARG.join(" ") : '';
         var options = typeof options === 'undefined' ? '' : options;
         print('[NASVEN] Calling jjs for your application ...');
-        var command = "jjs ${options} -DskipNasven=true -cp ${classpath} ${__DIR__}/nasven.js ${mainScript} ${newargs}";
+        var command = "jjs -scripting=true ${options} -DskipNasven=true -cp ${classpath} ${__DIR__}/nasven.js ${mainScript} ${newargs}";
         exec(command);
     }
 
@@ -242,5 +240,7 @@ var Nasven = new (function () {
     
 });
 
+// Exported features
 var console = {log:print};
 var require = Nasven.require;
+var exec = Nasven.exec;
