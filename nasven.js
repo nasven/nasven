@@ -208,27 +208,33 @@ var Nasven = new (function () {
         var pwdPath = Paths.get($ENV.PWD);
         var watchService = pwdPath.getFileSystem().newWatchService();
         fileToWatch.getParent().register(watchService, ENTRY_MODIFY);
-        requiredFiles.put(file, fileToWatch);
-        print('[NASVEN] File successfuly required.');
+        var requiredFile = {"file":"${file}","fileToWatch":"${fileToWatch}"};
+        print("[NASVEN] Registring required file: "+JSON.stringify(requiredFile));
+        requiredFiles.put(file.toString(), fileToWatch.toString());
+        print("[NASVEN] File ${file} successfuly required.");
         if (typeof watchingThread === 'undefined') {
             watchingThread = new Thread(function() {
                 while(true) {
                     var key = watchService.take();
+                    print("[NASVEN] WatchService got an event: ${key}");
                     var modifiedFiles = new java.util.HashSet();
                     for each(var watchEvent in key.pollEvents()) {
                       var kind = watchEvent.kind();
+                      print("[NASVEN] Kind of event: ${kind}");
                       if (kind === ENTRY_MODIFY) {
                           var fileName = watchEvent.context();
-                          modifiedFiles.add(fileName.toAbsolutePath());
+                          var fileIsRequired = requiredFiles.keySet().contains(fileName.toString());
+                          print("[NASVEN] File modified: ${fileName}. Required: ${fileIsRequired}");
+                          if (fileIsRequired) modifiedFiles.add(requiredFiles.get(fileName.toString()));
                       }
                     }
-                    modifiedFiles
-                        .stream()
-                        .filter(function(f)requiredFiles.containsValue(f))
+                    modifiedFiles.stream()
                         .map(function(f)f.toString())
-                        .forEach(load);
-                    var valid = key.reset();
-                    if (!valid) break;
+                        .forEach(function(f) {
+                           print("[NASVEN] Reloading file ${f}");
+                           load(f); 
+                         });
+                    if (!key.reset()) break;
                 }
             })
             watchingThread.setDaemon(true);
