@@ -35,6 +35,10 @@ var Nasven = new (function () {
     var System = Java.type("java.lang.System");
     var Thread = Java.type("java.lang.Thread");
 
+    function isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("win");
+    }
+
     function checkPathExists(path) {
         if (Files.isReadable(path) === false) {
             print("ERROR: File '${path}' cannot be found or is not readable.");
@@ -105,7 +109,10 @@ var Nasven = new (function () {
             var cpFile = Files.createTempFile('cp-', appdef.name + '.cp').toAbsolutePath();
             print('[NASVEN] Building temporary Apache Maven project to find dependencies ...');
             var debugNasven = $ENV['NASVEN_DEBUG'] === 'true';
-            exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify", !debugNasven);
+            if (isWindows())
+                exec("cmd.exe /C mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify", !debugNasven);
+            else
+                exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify", !debugNasven);
             print('[NASVEN] Done!');
             classpath = new jString(Files.readAllBytes(cpFile));
             return classpath;
