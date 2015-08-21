@@ -1,3 +1,4 @@
 [submodule "samples"]
 	path = samples
 	url = https://github.com/nasven/samples.git 
+	branch = master
