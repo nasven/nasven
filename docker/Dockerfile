@@ -25,6 +25,7 @@ RUN wget -O pcurl.sh "https://raw.githubusercontent.com/brunoborges/pcurl/master
     nasven /nasven/samples/mqtt && \
     nasven /nasven/samples/ratpack && \
     nasven /nasven/samples/spark && \
+    nasven /nasven/samples/twitter4j && \
     nasven /nasven/samples/tomcat
 
 ENV NASVEN_NORUN false
