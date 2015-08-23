@@ -29,7 +29,7 @@ if (java.lang.System.getProperty("skipNasven") !== 'true' && (arguments.length =
 if (arguments[0] === 'upgrade') {
   print("[NASVEN] Upgrading Nasven.js ... ");
   var NASVEN_DIR=$ENV.HOME + "/.nasven";
-  print("[NASVEN] Downloading latest Nasven.js ZIP bundle from GitHub ... ");
+  print("[NASVEN] Downloading latest Nasven.js from GitHub ... ");
   $EXEC("curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven -o ${NASVEN_DIR}/nasven");
   $EXEC("curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven.js -o ${NASVEN_DIR}/nasven.js");
   $EXEC("chmod +x ${NASVEN_DIR}/nasven*");
