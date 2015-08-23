@@ -30,15 +30,8 @@ if (arguments[0] === 'upgrade') {
   print("[NASVEN] Upgrading Nasven.js ... ");
   var NASVEN_DIR=$ENV.HOME + "/.nasven";
   print("[NASVEN] Downloading latest Nasven.js ZIP bundle from GitHub ... ");
-  $EXEC("curl -sSL https://github.com/nasven/nasven/archive/master.zip > nasven-master.zip");
-  print("[NASVEN] Unzipping bundle into ${NASVEN_DIR}/nasven-master/");
-  $EXEC("unzip -qo nasven-master.zip -d ${NASVEN_DIR}/");
-  print("[NASVEN] Moving all files to upper folder and overriding older files ... ");
-  $EXEC("cp -Ru ${NASVEN_DIR}/nasven-master/* ${NASVEN_DIR}/");
-  print("[NASVEN] Deleting nasven-master ...");
-  $EXEC("rm -rf ${NASVEN_DIR}/nasven-master");
-  print("[NASVEN] Deleting nasven-master.zip ...");
-  $EXEC("rm nasven-master.zip");
+  $EXEC("curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven -o ${NASVEN_DIR}/nasven");
+  $EXEC("curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven.js -o ${NASVEN_DIR}/nasven.js");
   print("[NASVEN] Nasven.js successfuly upgraded from GitHub! ");
   exit();  
 }
