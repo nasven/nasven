@@ -34,7 +34,7 @@ if (arguments[0] === 'upgrade') {
   print("[NASVEN] Unzipping bundle into ${NASVEN_DIR}/nasven-master/");
   $EXEC("unzip -qo nasven-master.zip -d ${NASVEN_DIR}/");
   print("[NASVEN] Moving all files to upper folder and overriding older files ... ");
-  $EXEC("mv -f -u ${NASVEN_DIR}/nasven-master/* ${NASVEN_DIR}/");
+  $EXEC("cp -Ru ${NASVEN_DIR}/nasven-master/* ${NASVEN_DIR}/");
   print("[NASVEN] Deleting nasven-master ...");
   $EXEC("rm -rf ${NASVEN_DIR}/nasven-master");
   print("[NASVEN] Deleting nasven-master.zip ...");
