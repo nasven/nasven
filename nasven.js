@@ -114,6 +114,15 @@ var Nasven = new (function () {
                     "  <dependencies>" +
                     "    ${dependenciesCP}" +
                     "  </dependencies>" +
+                    "  <build><plugins><plugin>" + 
+                    "    <artifactId>maven-assembly-plugin</artifactId>" +
+                    "    <configuration>" +
+                    "       <descriptorRefs>" +
+                    "          <descriptorRef>jar-with-dependencies</descriptorRef>" +
+                    "       </descriptorRefs>" +
+                    "       <executions><execution><id>assemble-all</id><phase>validate</phase><goals><goal>single</goal></goals></execution></executions>" +
+                    "    </configuration>" +
+                    "  </plugin></plugins></build>" +
                     "</project>"
 
             var pomFile = Files.createTempFile('pom-', '-' + appdef.name + '.xml').toAbsolutePath();
@@ -121,10 +130,11 @@ var Nasven = new (function () {
             var cpFile = Files.createTempFile('cp-', appdef.name + '.cp').toAbsolutePath();
             print('[NASVEN] Building temporary Apache Maven project to find dependencies ...');
             var debugNasven = $ENV['NASVEN_DEBUG'] === 'true';
+            var fatjar = $ENV['NASVEN_FATJAR'] === 'true' ? "assembly:assembly " : "";
             if (isWindows())
-                exec("cmd.exe /C mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify", !debugNasven);
+                exec("cmd.exe /C mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath ${fatjar}verify", !debugNasven);
             else
-                exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath verify", !debugNasven);
+                exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath ${fatjar}verify", !debugNasven);
             print('[NASVEN] Done!');
             classpath = new jString(Files.readAllBytes(cpFile));
             return classpath;
