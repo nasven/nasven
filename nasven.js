@@ -43,6 +43,7 @@ var Nasven = new (function () {
     var Collectors = Java.type("java.util.stream.Collectors");
     var Arrays = Java.type("java.util.Arrays");
     var Files = Java.type("java.nio.file.Files");
+    var File = Java.type("java.io.File");
     var Paths = Java.type("java.nio.file.Paths");
     var System = Java.type("java.lang.System");
     var Thread = Java.type("java.lang.Thread");
@@ -71,6 +72,7 @@ var Nasven = new (function () {
         var mainScriptPath = Paths.get(parentPath, appdef.main).toAbsolutePath();
         checkPathExists(mainScriptPath);
         appdef.mainScriptPath = mainScriptPath;
+        appdef.parentPath = parentPath;
         return appdef;
     }
 
@@ -141,12 +143,19 @@ var Nasven = new (function () {
         }
     }
 
-    function run(classpath, mainScript, options) {
+    function run(classpath, appdef) {
+        var mainScript = appdef.mainScriptPath;
+        var options = appdef.options;
+        var parentPath = appdef.parentPath;
         $ARG.shift(); // ignore first argument
         var newargs = $ARG.length > 0 ? '-- ' + $ARG.join(" ") : '';
         var options = typeof options === 'undefined' ? '' : options;
         print('[NASVEN] Calling jjs for your application ...');
-        var command = "jjs -scripting=true ${options} -DskipNasven=true -cp ${classpath} ${__DIR__}/nasven.js ${mainScript} ${newargs}";
+        var command = "jjs -scripting=true ${options} -DskipNasven=true -cp ${classpath}${File.pathSeparator}${parentPath} ${__DIR__}/nasven.js ${mainScript} ${newargs}";
+        var debugNasven = $ENV['NASVEN_DEBUG'] === 'true';
+        if (debugNasven) {
+          print("[NASVEN] ${command}");
+        }
         exec(command);
     }
 
@@ -159,7 +168,7 @@ var Nasven = new (function () {
         if (nasvenNoRun === false) {
             // if nasvenNoRun is true, it will only download Maven dependencies
             print('[NASVEN] About to run your nasven.js application under '+appdef.mainScriptPath+' ... \n');
-            run(classpath, appdef.mainScriptPath, appdef.options);
+            run(classpath, appdef);
             print('[NASVEN] Application successfuly executed.');
         }
     }
