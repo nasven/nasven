@@ -133,10 +133,11 @@ var Nasven = new (function () {
             print('[NASVEN] Building temporary Apache Maven project to find dependencies ...');
             var debugNasven = $ENV['NASVEN_DEBUG'] === 'true';
             var fatjar = $ENV['NASVEN_FATJAR'] === 'true' ? "assembly:assembly " : "";
-            if (isWindows())
+            if (isWindows()) {
                 exec("cmd.exe /C mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath ${fatjar}verify", !debugNasven);
-            else
+            } else {
                 exec("mvn -f ${pomFile} -Dmdep.outputFile=${cpFile} dependency:go-offline dependency:build-classpath ${fatjar}verify", !debugNasven);
+            }
             print('[NASVEN] Done!');
             classpath = new jString(Files.readAllBytes(cpFile));
             return classpath;
@@ -157,20 +158,6 @@ var Nasven = new (function () {
           print("[NASVEN] ${command}");
         }
         exec(command);
-    }
-
-    // Main body 
-    var skipNasven = System.getProperty("skipNasven", "false");
-    if (skipNasven === "false") {
-        var appdef = getAppDef($ARG[0]);
-        var classpath = buildClasspath(appdef);
-        var nasvenNoRun = System.getProperty("nasvenNoRun", $ENV['NASVEN_NORUN']) === "true";
-        if (nasvenNoRun === false) {
-            // if nasvenNoRun is true, it will only download Maven dependencies
-            print('[NASVEN] About to run your nasven.js application under '+appdef.mainScriptPath+' ... \n');
-            run(classpath, appdef);
-            print('[NASVEN] Application successfuly executed.');
-        }
     }
 
     // Exec with on-demand output
@@ -232,6 +219,7 @@ var Nasven = new (function () {
         while (true) Thread.sleep(1000);
     };
 
+    // vars used by required(file)
     var ENTRY_MODIFY = java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
     var requiredFiles = new java.util.HashMap();
     var watchingThread;
@@ -281,7 +269,20 @@ var Nasven = new (function () {
         }
     }
     this.require = require;
-    
+
+    // Main body 
+    var skipNasven = System.getProperty("skipNasven", "false");
+    if (skipNasven === "false") {
+        var appdef = getAppDef($ARG[0]);
+        var classpath = buildClasspath(appdef);
+        var nasvenNoRun = System.getProperty("nasvenNoRun", $ENV['NASVEN_NORUN']) === "true";
+        if (nasvenNoRun === false) {
+            // if nasvenNoRun is true, it will only download Maven dependencies
+            print('[NASVEN] About to run your nasven.js application under '+appdef.mainScriptPath+' ... \n');
+            run(classpath, appdef);
+            print('[NASVEN] Application successfuly executed.');
+        }
+    }    
 });
 
 // Exported features
