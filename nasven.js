@@ -13,31 +13,6 @@
  * Version: 1.0
  * Since: April 2015
  */
-if (java.lang.System.getProperty("skipNasven") !== 'true' && (arguments.length === 0 || arguments[0] === '-h')) {
-    print('Usage:');
-    print(' $> nasven [folder/ | folder/package.json]');
-    print();
-    print("To download dependencies to your local Maven repository without executing your app, set environment variable NASVEN_NORUN=true.");
-    print("Example:");
-    print(" $> NASVEN_NORUN=true nasven folder arg0 arg1");
-    print();
-    print("To debug Apache Maven, set environment variable NASVEN_DEBUG=true.");
-    print();
-    exit(1);
-}
-
-if (arguments[0] === 'upgrade') {
-  print("[NASVEN] Upgrading Nasven.js ... ");
-  var NASVEN_DIR=$ENV.HOME + "/.nasven";
-  print("[NASVEN] Downloading latest Nasven.js from GitHub ... ");
-  $EXEC("rm ${NASVEN_DIR}/nasven*");
-  $EXEC("curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven -o ${NASVEN_DIR}/nasven");
-  $EXEC("curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven.js -o ${NASVEN_DIR}/nasven.js");
-  $EXEC("chmod +x ${NASVEN_DIR}/nasven*");
-  print("[NASVEN] Nasven.js successfuly upgraded from GitHub! ");
-  exit();  
-}
-
 var Nasven = new (function () {
     var jString = Java.type("java.lang.String");
     var Collectors = Java.type("java.util.stream.Collectors");
@@ -47,6 +22,17 @@ var Nasven = new (function () {
     var Paths = Java.type("java.nio.file.Paths");
     var System = Java.type("java.lang.System");
     var Thread = Java.type("java.lang.Thread");
+
+    function download(url, file) {
+        with (new JavaImporter(java.net, java.nio.channels, java.io)) {
+            var website = new URL(url);
+            var rbc = Channels.newChannel(website.openStream());
+            var fos = new FileOutputStream(file);
+            fos.getChannel().transferFrom(rbc, 0, java.lang.Long.MAX_VALUE);
+            rbc.close();
+            fos.close();
+        }
+    }
 
     function isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("win");
@@ -119,6 +105,8 @@ var Nasven = new (function () {
                     "  <build><plugins><plugin>" + 
                     "    <artifactId>maven-assembly-plugin</artifactId>" +
                     "    <configuration>" +
+                    "       <outputDirectory>${appdef.parentPath}</outputDirectory>" +
+                    "       <finalName>${appdef.name}-${appdef.version}</finalName>" +
                     "       <descriptorRefs>" +
                     "          <descriptorRef>jar-with-dependencies</descriptorRef>" +
                     "       </descriptorRefs>" +
@@ -271,6 +259,32 @@ var Nasven = new (function () {
     this.require = require;
 
     // Main body 
+    if (java.lang.System.getProperty("skipNasven") !== 'true' && ($ARG.length === 0 || $ARG[0] === '-h')) {
+        print('Usage:');
+        print(' $> nasven [folder/ | folder/package.json] [arg0 arg1 arg2...]');
+        print();
+        print("To download dependencies to your local Maven repository without executing your app, set environment variable NASVEN_NORUN=true.");
+        print("Example:");
+        print(" $> NASVEN_NORUN=true nasven [folder/ | folder/package.json] [arg0 arg1 arg2...]");
+        print();
+        print("To debug Apache Maven, set environment variable NASVEN_DEBUG=true.");
+        print("To create a fat jar with dependencies, set environment variables: NASVEN_FATJAR=true NASVEN_NORUN=true");
+        print();
+        exit(1);
+    }
+
+    if ($ARG[0] === 'upgrade') {
+      print("[NASVEN] Upgrading Nasven.js ... ");
+      var NASVEN_DIR = $ENV.HOME + "/.nasven";
+      print("[NASVEN] Downloading latest Nasven.js from GitHub ... ");
+      $EXEC("rm ${NASVEN_DIR}/nasven*");
+      $EXEC("curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven -o ${NASVEN_DIR}/nasven");
+      $EXEC("curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven.js -o ${NASVEN_DIR}/nasven.js");
+      $EXEC("chmod +x ${NASVEN_DIR}/nasven*");
+      print("[NASVEN] Nasven.js successfuly upgraded from GitHub! ");
+      exit();  
+    }
+
     var skipNasven = System.getProperty("skipNasven", "false");
     if (skipNasven === "false") {
         var appdef = getAppDef($ARG[0]);
