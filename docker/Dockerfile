@@ -7,12 +7,11 @@ RUN apk add --update wget unzip perl git ca-certificates && \
     apk add --update --repository http://dl-4.alpinelinux.org/alpine/edge/community/ openjdk8 
 
 ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH $PATH:$JAVA_HOME/bin
 ENV MAVEN_VERSION 3.3.3
 ENV MAVEN_URL http://www.us.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.zip
-ENV PATH $PATH:$JAVA_HOME/bin:/apache-maven-$MAVEN_VERSION/bin:/nasven
 ENV MAVEN_FILE apache-maven-$MAVEN_VERSION-bin.zip
 ENV MAVEN_OPTS=-Dmaven.artifact.threads=10
+ENV PATH $PATH:$JAVA_HOME/bin:/apache-maven-$MAVEN_VERSION/bin:/nasven
 ENV NASVEN_NORUN true
 ENV NASVEN_DEBUG true
 
