@@ -1,31 +1,22 @@
-FROM alpine:latest
+FROM glassfish/openjdk
 
 MAINTAINER Bruno Borges <bruno.borges@gmail.com>
 
-# Install required packages
-RUN apk add --update wget unzip perl git ca-certificates && \
-    apk add --update --repository http://dl-4.alpinelinux.org/alpine/edge/community/ openjdk8 
-
-ENV JAVA_HOME /usr/lib/jvm/default-jvm
 ENV MAVEN_VERSION 3.3.3
 ENV MAVEN_URL http://www.us.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.zip
 ENV MAVEN_FILE apache-maven-$MAVEN_VERSION-bin.zip
 ENV MAVEN_OPTS=-Dmaven.artifact.threads=10
-ENV PATH $PATH:$JAVA_HOME/bin:/apache-maven-$MAVEN_VERSION/bin:/nasven
+ENV PATH $PATH:/apache-maven-$MAVEN_VERSION/bin:/nasven
 ENV NASVEN_NORUN true
 ENV NASVEN_DEBUG true
 
-RUN wget $MAVEN_URL && \
+RUN apk add --update wget unzip perl git && \
+    wget $MAVEN_URL && \
     unzip $MAVEN_FILE && \
     rm $MAVEN_FILE && \
     git clone --recursive --depth=1 https://github.com/nasven/nasven.git && \
-    apk del wget && \
-    apk del unzip && \
-    apk del git && \
-    apk del perl && \
+    apk del wget unzip git perl && \
     chmod a+x /nasven/nasven /nasven/nasven.js && \
-    find /usr/share/ca-certificates/mozilla/ -name *.crt -exec keytool -import -trustcacerts -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit -noprompt -file {} -alias {} \; && \
-    keytool -list -keystore $JAVA_HOME/jre/lib/security/cacerts --storepass changeit && \
     nasven /nasven/samples/asciidoctor && \
     nasven /nasven/samples/csv && \
     nasven /nasven/samples/jaxrs && \
