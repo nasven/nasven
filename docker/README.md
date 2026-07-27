@@ -1,14 +1,23 @@
-# Docker for Nasven.js
-This Dockerfile extends **alpine:latest** and adds OpenJDK from its community repository in order to run Nasven.js. It will install Maven 3 and clone Nasven.js GitHub repository and set it up in the PATH variable to be easily executed inside the container. By default it will run **nasven.js** on top of **/app**. Mount your application in that volume, or point to an existing sample.
+# Nasven container
 
-To run a specific path (sample) inside the container, you must do:
+The Dockerfile uses a JDK 25 Maven builder and a JDK 25 runtime image. It builds the current local checkout, copies the executable Nasven JAR and launcher into the runtime image, and runs a JavaScript smoke application during the image build.
 
-        # docker run -it nasven/nasven.js /nasven/samples/jaxrs
+```sh
+docker build -f docker/Dockerfile -t nasven.js-local .
+```
 
-You can also map directly to a directory in your host system containing a nasven.js project (package.json)::
+The default application path is `/app`:
 
-        # sudo docker run -it -v `pwd`:/app nasven/nasven.js
+```sh
+docker run --rm -v "$PWD/my-app:/app" nasven.js-local
+```
 
-If you want to pass arguments to your mounted /app project, you will have to indicate '/app' as the first argument, for example:
+To select another path or pass arguments, provide the application path first:
 
-        # sudo docker run -it -v `pwd`:/app nasven/nasven.js /app arg0 arg1 ...
+```sh
+docker run --rm \
+  -v "$PWD/my-app:/work/app" \
+  nasven.js-local /work/app arg0 "argument with spaces"
+```
+
+Application Maven dependencies are downloaded at runtime and cached inside the container unless a Maven repository volume is mounted.

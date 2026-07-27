@@ -1,8 +1,7 @@
 {
   "name": "nasven.js",
-  "version": "1.0.0",
-  "description": "Nasven",
-  "main": "nasven.js",
+  "version": "2.0.0",
+  "description": "Run JavaScript applications with Maven dependencies on JDK 25",
   "author": "@brunoborges",
   "license": "MIT"
 }
