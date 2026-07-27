@@ -43,6 +43,7 @@ final class DependencyResolver {
 
         RepositorySystem system = new RepositorySystemSupplier().get();
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        session.setSystemProperties(System.getProperties());
         session.setLocalRepositoryManager(
                 system.newLocalRepositoryManager(session, new LocalRepository(localRepository.toFile())));
 

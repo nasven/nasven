@@ -27,13 +27,21 @@ class DependencyResolverTest {
                 "root",
                 "1.0",
                 """
-                <dependencies>
-                  <dependency>
-                    <groupId>org.example</groupId>
-                    <artifactId>child</artifactId>
-                    <version>1.0</version>
-                  </dependency>
-                </dependencies>
+                <profiles>
+                  <profile>
+                    <id>jdk-runtime-dependencies</id>
+                    <activation>
+                      <jdk>[1,)</jdk>
+                    </activation>
+                    <dependencies>
+                      <dependency>
+                        <groupId>org.example</groupId>
+                        <artifactId>child</artifactId>
+                        <version>1.0</version>
+                      </dependency>
+                    </dependencies>
+                  </profile>
+                </profiles>
                 """);
 
         RemoteRepository repository = new RemoteRepository.Builder(

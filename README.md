@@ -16,7 +16,12 @@ git submodule update --init --recursive
 mvn verify
 ```
 
-`mvn verify` runs unit and integration tests, builds the executable runtime, and executes a packaged end-to-end JavaScript application. The generated files are:
+`mvn verify` runs unit and integration tests, builds the executable runtime,
+executes the packaged end-to-end application, and runs the complete samples
+suite. The suite resolves every supported manifest, executes deterministic
+applications, and probes each HTTP server. It also verifies that the three
+deferred JavaFX samples fail with the documented `-fx` error. The generated
+files are:
 
 - `target/nasven.jar`
 - `target/nasven-distribution.tar.gz`
@@ -90,7 +95,13 @@ The following globals are available:
 - `exec("command", suppress)` and `Nasven.exec(...)`: execute a process in the application directory; output is visible unless `suppress` is `true`
 - `daemon()` and `Nasven.daemon()`: keep the application context alive
 
-The original `helloworld` and `csv` samples run unchanged on this baseline, including `JavaImporter`, `for each`, Java package globals, scripting interpolation, and Maven-backed Java classes.
+The samples use ES2024-compatible JavaScript while exercising Java interop,
+runtime transitive dependencies, local file loading, external-service
+validation modes, and Java HTTP frameworks. Run the suite directly with:
+
+```sh
+samples/verify-samples.sh ./nasven
+```
 
 ## Compatibility boundaries
 
@@ -101,7 +112,7 @@ Phase 1 intentionally does not silently emulate unsupported `jjs` behavior:
 - `require` preserves local evaluation and duplicate suppression, but automatic watch-and-reload is deferred because evaluating from a watcher thread conflicts with the context threading model.
 - `NASVEN_FATJAR=true` is rejected. Application artifact assembly is separate from runtime dependency resolution.
 - Unknown `jjs` options are rejected rather than ignored.
-- GraalJS does not guarantee every Nashorn extension or every old third-party sample. Migration failures are reported with source locations.
+- GraalJS does not guarantee every Nashorn extension. Runtime failures are reported with source locations.
 
 ## Docker
 
