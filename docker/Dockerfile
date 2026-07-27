@@ -1,35 +1,20 @@
-FROM glassfish/openjdk
+FROM maven:3.9-eclipse-temurin-25 AS build
 
-MAINTAINER Bruno Borges <bruno.borges@gmail.com>
+WORKDIR /src
+COPY pom.xml ./
+RUN mvn -q -DskipTests dependency:go-offline
+COPY src ./src
+COPY nasven install README.md ./
+RUN mvn -q -DskipTests package
 
-ENV MAVEN_VERSION 3.3.3
-ENV MAVEN_URL http://www.us.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.zip
-ENV MAVEN_FILE apache-maven-$MAVEN_VERSION-bin.zip
-ENV MAVEN_OPTS=-Dmaven.artifact.threads=10
-ENV PATH $PATH:/apache-maven-$MAVEN_VERSION/bin:/nasven
-ENV NASVEN_NORUN true
-ENV NASVEN_DEBUG true
+FROM eclipse-temurin:25-jre
 
-RUN apk add --update wget unzip perl git && \
-    wget $MAVEN_URL && \
-    unzip $MAVEN_FILE && \
-    rm $MAVEN_FILE && \
-    git clone --recursive --depth=1 https://github.com/nasven/nasven.git && \
-    apk del wget unzip git perl && \
-    chmod a+x /nasven/nasven /nasven/nasven.js && \
-    nasven /nasven/samples/asciidoctor && \
-    nasven /nasven/samples/csv && \
-    nasven /nasven/samples/jaxrs && \
-    nasven /nasven/samples/jetty && \
-    nasven /nasven/samples/mqtt && \
-    nasven /nasven/samples/ratpack && \
-    nasven /nasven/samples/spark && \
-    nasven /nasven/samples/twitter4j && \
-    nasven /nasven/samples/tomcat
+WORKDIR /opt/nasven
+COPY --from=build /src/target/nasven.jar ./lib/nasven.jar
+COPY --from=build /src/nasven ./nasven
+COPY docker/smoke ./smoke
+RUN chmod 0755 ./nasven && ./nasven ./smoke docker-smoke
 
-ENV NASVEN_NORUN false
-ENV NASVEN_DEBUG false
-
-ENTRYPOINT ["/nasven/nasven"]
-
+WORKDIR /app
+ENTRYPOINT ["/opt/nasven/nasven"]
 CMD ["/app"]

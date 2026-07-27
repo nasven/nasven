@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 https://maven.apache.org/xsd/assembly-2.2.0.xsd">
+    <id>distribution</id>
+    <formats>
+        <format>tar.gz</format>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <baseDirectory>nasven-${project.version}</baseDirectory>
+    <files>
+        <file>
+            <source>${project.build.directory}/${project.build.finalName}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+            <destName>nasven.jar</destName>
+        </file>
+        <file>
+            <source>nasven</source>
+            <outputDirectory>.</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+        <file>
+            <source>README.md</source>
+            <outputDirectory>.</outputDirectory>
+        </file>
+        <file>
+            <source>install</source>
+            <outputDirectory>.</outputDirectory>
+            <fileMode>0755</fileMode>
+        </file>
+    </files>
+</assembly>

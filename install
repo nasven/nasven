@@ -1,101 +1,77 @@
-#!/bin/bash
-#
-#  Based on GVM shell installer at http://get.gvmtool.net/
-#
-NASVEN_DIR="${HOME}/.nasven"
+#!/usr/bin/env sh
+set -eu
 
-if [ -d "${NASVEN_DIR}" ]; then
-	echo " Nasven.js was found at:"
-	echo "   > ${NASVEN_DIR}"
-	echo ""
-	echo " Run the following to upgrade."
-  echo "    $ nasven upgrade"
-	echo ""
-	exit 0
+nasven_dir=${NASVEN_DIR:-"$HOME/.nasven"}
+source_dir=${NASVEN_SOURCE_DIR:-}
+temporary_dir=
+
+fail() {
+    echo "nasven installer: $*" >&2
+    exit 1
+}
+
+require_command() {
+    command -v "$1" >/dev/null 2>&1 || fail "'$1' is required."
+}
+
+cleanup() {
+    if [ -n "$temporary_dir" ] && [ -d "$temporary_dir" ]; then
+        rm -rf "$temporary_dir"
+    fi
+}
+trap cleanup EXIT HUP INT TERM
+
+require_command java
+require_command mvn
+require_command tar
+require_command install
+
+java_feature=$(java -XshowSettings:properties -version 2>&1 \
+    | sed -n 's/^[[:space:]]*java.specification.version = //p' \
+    | head -n 1)
+case "$java_feature" in
+    25|2[6-9]|[3-9][0-9]) ;;
+    *) fail "JDK 25 or later is required; detected '${java_feature:-unknown}'." ;;
+esac
+
+if [ -z "$source_dir" ]; then
+    require_command curl
+    temporary_dir=$(mktemp -d "${TMPDIR:-/tmp}/nasven-install.XXXXXX")
+    archive="$temporary_dir/nasven.tar.gz"
+    echo "Downloading Nasven source..."
+    curl -fsSL https://github.com/nasven/nasven/archive/refs/heads/master.tar.gz -o "$archive"
+    tar -xzf "$archive" -C "$temporary_dir"
+    source_dir="$temporary_dir/nasven-master"
 fi
 
-#if [ -z $(which unzip) ]; then
-#	echo "Unzip not found."
-#	echo "Install unzip first on your system and then run this again."
-#	echo ""
-#	exit 0
-#fi
+[ -f "$source_dir/pom.xml" ] || fail "Nasven source does not contain pom.xml: $source_dir"
 
-if [ -z $(which curl) ]; then
-	echo "curl not found."
-	echo "Install curl first on your system and then run this again."
-	echo ""
-	exit 0
+echo "Building Nasven with Maven..."
+(cd "$source_dir" && mvn -q -DskipTests package)
+
+distribution="$source_dir/target/nasven-distribution.tar.gz"
+[ -f "$distribution" ] || fail "Maven did not produce $distribution"
+
+install_stage=$(mktemp -d "${TMPDIR:-/tmp}/nasven-stage.XXXXXX")
+tar -xzf "$distribution" -C "$install_stage"
+distribution_dir=$(find "$install_stage" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+[ -n "$distribution_dir" ] || fail "Distribution archive is empty."
+
+mkdir -p "$nasven_dir/lib"
+install -m 0755 "$distribution_dir/nasven" "$nasven_dir/nasven"
+install -m 0644 "$distribution_dir/lib/nasven.jar" "$nasven_dir/lib/nasven.jar"
+install -m 0644 "$distribution_dir/README.md" "$nasven_dir/README.md"
+rm -rf "$install_stage"
+
+path_line="export PATH=\"$nasven_dir:\$PATH\""
+for profile in "$HOME/.profile" "$HOME/.bash_profile" "$HOME/.bashrc"; do
+    if [ -f "$profile" ] && ! grep -F "$nasven_dir:" "$profile" >/dev/null 2>&1; then
+        printf '\n%s\n' "$path_line" >> "$profile"
+    fi
+done
+if [ ! -f "$HOME/.profile" ]; then
+    printf '%s\n' "$path_line" > "$HOME/.profile"
 fi
 
-if [ -z $(which mvn) ]; then
-  echo "mvn not found."
-  echo "Install Apache Maven 3.+ on your system and then run this again."
-  echo ""
-  exit 0
-fi
-
-if [ -z $(which jjs) ]; then
-  echo "jjs not found."
-  echo "Install Java SE 8 on your system ad then run this again."
-  echo ""
-  exit 0
-fi
-
-echo "Installing Nasven.js..."
-mkdir ${NASVEN_DIR}
-
-echo "Downloading Nasven.js files from GitHub ..."
-curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven -o ${NASVEN_DIR}/nasven
-curl -sSL https://raw.githubusercontent.com/nasven/nasven/master/nasven.js -o ${NASVEN_DIR}/nasven.js
-
-chmod +x ${NASVEN_DIR}/nasven*
-
-echo "Configuring environment..."
-
-NASVEN_SNIPPET=$(cat << EOF
-export PATH=$NASVEN_DIR:$PATH
-EOF
-)
-
-bash_profile="${HOME}/.bash_profile"
-profile="${HOME}/.profile"
-bashrc="${HOME}/.bashrc"
-
-echo "Updating shell profiles..."
-if [ ! -f "${bash_profile}" -a ! -f "${profile}" ]; then
-	echo "#!/bin/bash" > "${bash_profile}"
-	echo "${NASVEN_SNIPPET}" >> "${bash_profile}"
-	echo "Created and initialised ${bash_profile}"
-else
-	if [ -f "${bash_profile}" ]; then
-		if [ -z `grep 'NASVEN' "${bash_profile}"` ]; then
-      echo "" >> "${bash_profile}"
-			echo "${NASVEN_SNIPPET}" >> "${bash_profile}"
-			echo "Updated existing ${bash_profile}"
-		fi
-	fi
-
-	if [ -f "${profile}" ]; then
-		if [ -z `grep 'NASVEN' "${profile}"` ]; then
-      echo "" >> "${profile}"
-			echo "${NASVEN_SNIPPET}" >> "${profile}"
-			echo "Updated existing ${profile}"
-		fi
-	fi
-fi
-
-if [ ! -f "${bashrc}" ]; then
-	echo "#!/bin/bash" > "${bashrc}"
-	echo "${NASVEN_SNIPPET}" >> "${bashrc}"
-	echo "Created and initialised ${bashrc}"
-else
-	if [ -z `grep 'NASVEN' "${bashrc}"` ]; then
-    echo "" >> "${bashrc}"
-		echo "${NASVEN_SNIPPET}" >> "${bashrc}"
-		echo "Updated existing ${bashrc}"
-	fi
-fi
-
-# Done
-echo "Nasven.js was installed successfuly."
+echo "Nasven installed in $nasven_dir"
+echo "Open a new shell or run: export PATH=\"$nasven_dir:\$PATH\""

@@ -1,29 +1,40 @@
-# Copilot instructions for Nasven.js
+# Copilot instructions for Nasven
 
 ## Runtime and validation
 
-- This is a Java 8 Nashorn project, not a Node.js application. Use a JDK 8 distribution that includes `jjs` and Apache Maven 3+. `package.json` is metadata for Nasven itself; it defines no npm scripts or dependencies.
-- Initialize the sample applications before using them: `git submodule update --init --recursive`.
-- Run one sample/application with `./nasven samples/<name>` or `./nasven path/to/package.json`. The direct equivalent is `jjs -scripting nasven.js -- samples/<name>`.
-- Resolve one sample's Maven dependencies without executing it with `NASVEN_NORUN=true ./nasven samples/<name>`. Add `NASVEN_DEBUG=true` to expose the generated Maven command and its output.
-- Build a fat JAR for one sample with `NASVEN_FATJAR=true NASVEN_NORUN=true ./nasven samples/<name>`.
-- There is no automated test or lint suite. Treat a targeted sample invocation as the single-scenario check, then run other affected samples when changing shared dependency resolution or launcher behavior.
-- Build the container image from the repository root with `docker build -f docker/Dockerfile -t nasven.js-local .`. The Dockerfile clones `nasven/nasven` rather than copying the local build context, so this checks the published repository, not uncommitted local changes.
+- Nasven targets JDK 25 and embeds GraalJS. It no longer uses Java 8, Nashorn, or `jjs`.
+- Use Apache Maven 3.9+ and JDK 25+. Run the complete build with `mvn verify`.
+- `mvn verify` includes unit tests and a packaged-launcher end-to-end application. Use `mvn test` while iterating on Java behavior.
+- Initialize the legacy samples with `git submodule update --init --recursive`.
+- Run an application with `./nasven samples/<name>` or `./nasven path/to/package.json`.
+- Resolve dependencies without running with `NASVEN_NORUN=true ./nasven <application>`.
+- Enable manifest/resolver/classpath diagnostics with `NASVEN_DEBUG=true`.
+- Build the local container with `docker build -f docker/Dockerfile -t nasven.js-local .`. The Dockerfile uses the local build context.
 
 ## Architecture
 
-- `nasven` is the portable shell entry point. It finds the adjacent `nasven.js` and launches it through `jjs` with the Nashorn scripting and ES6 flags.
-- `nasven.js` runs in two phases. The bootstrap phase accepts an application directory or `package.json`, normalizes its `main` entry, converts `dependencies.maven` coordinates into a temporary POM, asks Maven to resolve a classpath, and starts a second `jjs` process.
-- The second process receives `-DskipNasven=true`, the resolved classpath, and the application directory. This prevents bootstrap recursion while loading the application's main script with its Maven artifacts available to Nashorn.
-- The same script also exports application globals: `console.log`, `exec`, `daemon`, and the local-file `require` implementation. `require` is not CommonJS; it uses Nashorn `load()` and a Java NIO watch service to reload modified files.
-- Nasven application manifests follow the repository's `package.json` shape: `main` defaults to `index.js`; `dependencies.maven` is an array of `groupId:artifactId:version` strings; and `options` is forwarded to the application `jjs` process.
-- `samples` is a git submodule maintained in `nasven/samples`. `install` is a separate distribution path that downloads `nasven` and `nasven.js` into `~/.nasven` and adds that directory to shell profiles.
+- `pom.xml` builds a JDK 25 executable shaded JAR plus ZIP/TAR distributions. The shaded manifest must retain `Multi-Release: true`, and service descriptors must be merged for Truffle and Maven Resolver.
+- `nasven` is the POSIX launcher. It finds the adjacent installed JAR or `target/nasven.jar`, preserves argument boundaries, changes to the application directory, and starts Java with the required native/Unsafe access flags.
+- `NasvenCli` handles help/upgrade modes, environment flags, manifest loading, resolution, and exit codes.
+- `ManifestLoader` preserves the legacy `package.json` contract: `main` defaults to `index.js`, `dependencies.maven` contains `groupId:artifactId:version`, and only the legacy `-scripting` option is accepted.
+- `DependencyResolver` embeds Maven Resolver, using Maven Central and `~/.m2/repository`; no external `mvn` process is used at runtime.
+- `ApplicationClassLoader` is child-first for application libraries but parent-first for the JDK, GraalJS/Truffle, and Nasven runtime.
+- `GraalApplicationRunner` creates one trusted GraalJS context with Nashorn compatibility, syntax extensions, scripting mode, application IO, host access, the resolved class loader, and exact application arguments.
+- `NasvenRuntime` exports `require`, `exec`, and `daemon`. `require` evaluates canonical local files once; hot reload is deliberately not part of phase 1.
+
+## Compatibility and security
+
+- Nasven applications are trusted local code. `HostAccess.ALL`, unrestricted host-class lookup, IO, process creation, and inherited environment access are intentional parts of the application model.
+- Keep `js.nashorn-compat`, `js.syntax-extensions`, and `js.scripting` explicit. They cover different compatibility surfaces.
+- Preserve `Java.type`, `Packages`, Java package globals, `JavaImporter`, `Java.extend`/`Java.super`, `print`, `console.log`, and scripting interpolation when changing context configuration.
+- A GraalJS context cannot be entered concurrently. Do not reintroduce watcher threads that evaluate JavaScript or claim concurrent server-callback compatibility without a tested dispatch design.
+- JavaFX/`-fx`, automatic require reload, arbitrary `jjs` options, and `NASVEN_FATJAR` are explicit deferrals and must fail or remain documented rather than silently degrade.
 
 ## Codebase conventions
 
-- Preserve Nashorn scripting syntax in `nasven.js`: Java integration uses `Java.type`, `JavaImporter`, and Java package globals; launcher state comes from `$ARG`, `$ENV`, `$EXEC`, and `__DIR__`; double-quoted strings use Nashorn `${...}` interpolation.
-- Do not enable strict mode or mechanically modernize the file as standard Node/browser JavaScript. The implementation relies on Nashorn-only constructs including `with (new JavaImporter(...))`, `for each`, and expression closures.
-- Keep the two-phase guard intact: bootstrap behavior is controlled by the `skipNasven` Java system property, while user-facing modes use the exact lowercase string value `"true"` in `NASVEN_NORUN`, `NASVEN_DEBUG`, and `NASVEN_FATJAR`.
-- Keep cross-platform process behavior paired. Maven invocation has explicit Windows and Unix branches, and application classpaths must use Java's `File.pathSeparator`.
-- Resolve application paths through Java NIO and set `$ENV.PWD` to the manifest's parent before Maven execution or script loading; relative application files and the custom `require` depend on that working directory.
-- The launcher script and `nasven.js` must remain adjacent when installed. Changes to invocation flags or file names usually require coordinated updates to `nasven`, `install`, README examples, and the Docker image setup.
+- Keep Java code under `src/main/java/org/nasven` and tests under `src/test/java/org/nasven`.
+- Keep manifest, resolver, runtime, and process responsibilities separated; do not move bootstrap behavior back into JavaScript.
+- Preserve source-aware error messages and distinct nonzero exit codes for manifest, resolution, and runtime failures.
+- Keep shell scripts POSIX-compatible, quote every path/argument, and avoid `eval`.
+- When changing shaded dependencies, run the packaged end-to-end test; in-process tests do not detect missing multi-release manifest entries or service descriptors.
+- Do not modernize the external `samples` submodule or unrelated NetBeans metadata as part of runtime changes.

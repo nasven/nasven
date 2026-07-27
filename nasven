@@ -1,5 +1,48 @@
-#!/usr/bin/env sh 
-# Due to inconsistency between Unix systems, the full shebang (with jjs arguments) can't be used directly in nasven.js
-# Therefor, users must use this shell script to start nasven.js (both files must be in PATH, together).
-nasven_js="$(dirname $(realpath $0))/nasven.js"
-jjs --language=es6 -fv -doe -ot -scripting=true "$nasven_js" -- "$@"
+#!/usr/bin/env sh
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+if [ -f "$script_dir/lib/nasven.jar" ]; then
+    nasven_jar="$script_dir/lib/nasven.jar"
+elif [ -f "$script_dir/target/nasven.jar" ]; then
+    nasven_jar="$script_dir/target/nasven.jar"
+else
+    echo "nasven: runtime JAR not found beside the launcher; run 'mvn package'." >&2
+    exit 2
+fi
+
+if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    java_command="$JAVA_HOME/bin/java"
+else
+    java_command="java"
+fi
+
+case "${1:-}" in
+    ""|-h|--help|upgrade)
+        exec "$java_command" \
+            --enable-native-access=ALL-UNNAMED \
+            --sun-misc-unsafe-memory-access=allow \
+            -jar "$nasven_jar" "$@"
+        ;;
+esac
+
+application=$1
+shift
+if [ -d "$application" ]; then
+    application=$(CDPATH= cd -- "$application" && pwd -P)
+    application_dir=$application
+elif [ -f "$application" ]; then
+    application_dir=$(CDPATH= cd -- "$(dirname -- "$application")" && pwd -P)
+    application="$application_dir/$(basename -- "$application")"
+else
+    exec "$java_command" \
+        --enable-native-access=ALL-UNNAMED \
+        --sun-misc-unsafe-memory-access=allow \
+        -jar "$nasven_jar" "$application" "$@"
+fi
+
+cd "$application_dir"
+exec "$java_command" \
+    --enable-native-access=ALL-UNNAMED \
+    --sun-misc-unsafe-memory-access=allow \
+    -jar "$nasven_jar" "$application" "$@"

@@ -1,50 +1,128 @@
-Nasven.js
-=====
-What is Nasven? Quoting [Lukas Eder](https://twitter.com/lukaseder):
+# Nasven
 
-        "Nasven = Nashorn + Maven. A tool to get Maven artifacts 
-                  in scope for Nashorn script execution."
-
-Nasven allows developers to code Javascript applications that run on top of the Java Platform (using Nashorn engine) and that may have dependencies on Apache Maven artifacts. Developers can build pure server-side applications, shell scripts, or even JavaFX desktop applications, and any Maven dependency will be downloaded and configured in the classpath automatically.
+Nasven runs JavaScript applications on JDK 25 with Java libraries resolved from Maven repositories. It embeds GraalJS and keeps the original Nasven application model: an application is a JavaScript entry point plus a `package.json` containing Maven coordinates.
 
 ## Requirements
-You must have installed in your environment the following softwares:
- - Java SE 8
- - Apache Maven 3+
 
-## Installation
-You can install on your Linux-based environment with the following command:
+- JDK 25 or later
+- Apache Maven 3.9+ to build Nasven or use the source-based installer
 
-        $ curl -sSL j.mp/installnasven | sh
+Maven is not required when running an installed Nasven distribution. Application dependencies are resolved by the Maven Resolver libraries embedded in Nasven.
+
+## Build and test
+
+```sh
+git submodule update --init --recursive
+mvn verify
+```
+
+`mvn verify` runs unit and integration tests, builds the executable runtime, and executes a packaged end-to-end JavaScript application. The generated files are:
+
+- `target/nasven.jar`
+- `target/nasven-distribution.tar.gz`
+- `target/nasven-distribution.zip`
+
+Run an application from the repository:
+
+```sh
+./nasven samples/helloworld "argument with spaces"
+```
+
+The `nasven` launcher preserves argument boundaries and runs the application from its own directory so relative files behave consistently.
+
+## Install or upgrade
+
+The phase-one installer downloads the source archive, builds it with Maven, and installs the distribution under `~/.nasven`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/nasven/nasven/master/install | sh
+```
+
+Run the same command again to upgrade. For a local checkout:
+
+```sh
+NASVEN_SOURCE_DIR="$PWD" ./install
+```
+
+## Application manifest
+
+Nasven accepts an application directory or an explicit `package.json`:
+
+```json
+{
+  "name": "example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "options": "-scripting",
+  "dependencies": {
+    "maven": [
+      "org.apache.commons:commons-lang3:3.17.0"
+    ]
+  }
+}
+```
+
+- `main` defaults to `index.js`; the legacy value `index` also maps to `index.js`.
+- `dependencies.maven` is an array of `groupId:artifactId:version` coordinates. Runtime transitive dependencies are resolved from Maven Central and cached in `~/.m2/repository`.
+- `options` may be omitted. `-scripting` is accepted as a compatibility no-op because scripting mode is always enabled. Other former `jjs` options fail explicitly.
+- Arguments after the application path are exposed through the JavaScript `arguments` array.
+
+Resolve dependencies without running the script:
+
+```sh
+NASVEN_NORUN=true ./nasven path/to/application
+```
+
+Print manifest, coordinates, and the resolved classpath:
+
+```sh
+NASVEN_DEBUG=true ./nasven path/to/application
+```
+
+## JavaScript runtime
+
+Nasven configures GraalJS 25.0 with Nashorn compatibility, syntax extensions, scripting interpolation, application IO, and unrestricted Java host access. Applications are trusted local programs and can access the host through `Java.type`, `Packages`, package globals, and resolved Java libraries.
+
+The following globals are available:
+
+- `print(value)` and `console.log(value)`
+- `require("relative/file.js")` and `Nasven.require(...)`: evaluate a local file once, relative to the application root
+- `exec("command", suppress)` and `Nasven.exec(...)`: execute a process in the application directory; output is visible unless `suppress` is `true`
+- `daemon()` and `Nasven.daemon()`: keep the application context alive
+
+The original `helloworld` and `csv` samples run unchanged on this baseline, including `JavaImporter`, `for each`, Java package globals, scripting interpolation, and Maven-backed Java classes.
+
+## Compatibility boundaries
+
+Phase 1 intentionally does not silently emulate unsupported `jjs` behavior:
+
+- JavaFX and `options: "-fx"` are not supported. JDK 25 does not bundle JavaFX, and the former `$STAGE` launcher contract needs a separate OpenJFX design.
+- A GraalJS context cannot be entered concurrently. Java libraries that invoke JavaScript callbacks concurrently from worker threads need a future dispatch or serialization model.
+- `require` preserves local evaluation and duplicate suppression, but automatic watch-and-reload is deferred because evaluating from a watcher thread conflicts with the context threading model.
+- `NASVEN_FATJAR=true` is rejected. Application artifact assembly is separate from runtime dependency resolution.
+- Unknown `jjs` options are rejected rather than ignored.
+- GraalJS does not guarantee every Nashorn extension or every old third-party sample. Migration failures are reported with source locations.
 
 ## Docker
-You can use the Docker image **nasven/nasven.js** published in Docker Hub.
 
-        # sudo docker run -it nasven/nasven.js /nasven/samples/helloworld
+Build the JDK 25 image from the current checkout:
 
-You can also map and run a local (on host) application:
+```sh
+docker build -f docker/Dockerfile -t nasven.js-local .
+```
 
-        # sudo docker run -it -v `pwd`/samples/hellodocker:/app nasven/nasven.js
+Run a mounted application:
 
-## Example
-The [samples](https://github.com/nasven/samples) repository contains several **Nasven** applications. One of those samples is the **jaxrs** sample that uses the JAX-RS Client API. This sample application is coded inside the file [index.js](https://github.com/nasven/samples/jaxrs/index.js) of the JAX-RS sample. Prior to Nasven.js, in order to run this application sample, a developer would have to download all the dependencies of JAX-RS Client API, and an implementation of the specification. But it is much easier to use [Apache Maven](http://maven.apache.org) to depend on those artifacts. The configuration of this sample application is defined in the file [package.json](https://github.com/nasven/samples/jaxrs/package.json). To run this application, use one of the following commands:
+```sh
+docker run --rm -v "$PWD/my-app:/app" nasven.js-local
+```
 
-        $ jjs -scripting nasven.js -- samples/jaxrs
-        
-        $ ./nasven samples/jaxrs
+Pass application arguments by naming `/app` first:
 
-You can read arguments inside your code with ''arguments[0]'', ''arguments[1]'', and so on.
-
-### Application Definition File **package.json**
-Check the [samples](https://github.com/nasven/samples) repositoryr for more examples of the **package.json** files with defined Maven dependencies.
-
-## Features
-Every application executed with Nasven.js will have Nasven itself loaded to provide access to features defined in **nasven.js**:
-
- * require('path/to/file.js'): same as Nashorn load(), but only for local files and this will be watched for updates and reloaded on the fly.
- * daemon(): it will create a deamon Thread to keep the application up and running.
- * exec('command', suppress): same as Nashorn exec() except it will print output on demand if suppress is false. By default output is suppressed. Optional argument.
- * console.log('text'): same as print().
+```sh
+docker run --rm -v "$PWD/my-app:/app" nasven.js-local /app arg0 "arg one"
+```
 
 ## License
+
 MIT

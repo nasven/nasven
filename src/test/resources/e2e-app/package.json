@@ -1,0 +1,10 @@
+{
+  "name": "nasven-e2e",
+  "version": "1.0.0",
+  "options": "-scripting",
+  "dependencies": {
+    "maven": [
+      "org.apache.commons:commons-lang3:3.17.0"
+    ]
+  }
+}
