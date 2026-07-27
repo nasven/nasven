@@ -4,7 +4,9 @@
   "options": "-scripting",
   "dependencies": {
     "maven": [
-      "org.apache.commons:commons-lang3:3.17.0"
+      "org.apache.commons:commons-csv:1.14.1",
+      "org.slf4j:slf4j-api:1.7.25",
+      "org.slf4j:slf4j-simple:1.7.25"
     ]
   }
 }
